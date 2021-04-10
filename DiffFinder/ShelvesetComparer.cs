@@ -160,7 +160,7 @@ namespace DiffFinder
 
         public void OutputPaneWriteLine(string text, bool prefixDateTime = true)
         {
-            IVsOutputWindow outWindow = GetService<SVsOutputWindow>() as IVsOutputWindow;
+            IVsOutputWindow outWindow = ServiceProvider.GetService<SVsOutputWindow>() as IVsOutputWindow;
             if (outWindow == null)
             {
                 return;
@@ -173,7 +173,7 @@ namespace DiffFinder
             if (generalPane == null)
             {
                 // the pane doesn't already exist
-                outWindow.CreatePane(ref paneGuid, WiredTechSolutions.ShelvesetComparer.Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
+                outWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
                 outWindow.GetPane(ref paneGuid, out generalPane);
             }
 
