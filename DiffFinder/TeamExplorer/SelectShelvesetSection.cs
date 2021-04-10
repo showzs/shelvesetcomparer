@@ -281,7 +281,7 @@ namespace DiffFinder
                     "Owner" + (idx % 2)));
             }
 
-            Task.Delay(1500); // for some time consuming operation, to show UI response
+            System.Threading.Thread.Sleep(1500); // for some time consuming operation, to show UI response
 
             return result;
         }
