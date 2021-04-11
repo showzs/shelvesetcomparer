@@ -2,7 +2,7 @@
 #if DEBUG
 
 // activate to get fake shelvest results with delay for debugging
-#define FakeShelvesetResult
+#define StubbingWithoutServer
 
 #endif
 

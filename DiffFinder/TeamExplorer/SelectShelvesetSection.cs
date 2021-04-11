@@ -1,7 +1,5 @@
 ﻿// <copyright file="SelectShelvesetSection.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
 
-//#define FakeShelvesetResult // activate to get fake shelvest results with delay for debugging
-
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.Controls;
 using Microsoft.TeamFoundation.VersionControl.Client;
@@ -143,7 +141,7 @@ namespace DiffFinder
             // Make the server call asynchronously to avoid blocking the UI
             var fetchShelvesetsTask = Task.Run(() =>
             {
-#if FakeShelvesetResult
+#if StubbingWithoutServer
                 return FetchFakedShelveset();
 #else
                 return FetchShevlesets(this.FirstUserAccountName, this.SecondUserAccountName, this.CurrentContext);
@@ -219,7 +217,7 @@ namespace DiffFinder
         /// Retrieves the shelveset for pending change for the current user 
         /// </summary>
         /// <param name="context">The Team foundation server context</param>
-        internal Shelveset FetchPendingChangeShelveset(ITeamFoundationContext context, Workspace ws = null)
+        internal ShelvesetViewModel FetchPendingChangeShelveset(ITeamFoundationContext context, Workspace ws = null)
         {
             if (context != null && context.HasCollection && context.HasTeamProject)
             {
@@ -240,7 +238,7 @@ namespace DiffFinder
                         workspace.Shelve(pendChange, changes, ShelvingOptions.Replace);//you can specify to replace existing shelveset, or to remove pending changes from the local workspace with ShelvingOptions
                         pendChange.CreationDate = DateTime.Now;
 
-                        return pendChange;
+                        return new ShelvesetViewModel(pendChange);
                     }
                 }
             }

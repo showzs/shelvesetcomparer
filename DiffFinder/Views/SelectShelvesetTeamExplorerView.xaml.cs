@@ -195,7 +195,7 @@ namespace DiffFinder
                 var page = parent.TeamExplorer.GetCurrentPageAsShelvesetComparerPage();
                 var pendChangeShelveset = parent.FetchPendingChangeShelveset(this.ParentSection.Context, page?.CurrentWorkspace);
                 
-                var firstSheleveset = this.ListShelvesets.SelectedItems[0] as Shelveset;
+                var firstSheleveset = this.ListShelvesets.SelectedItems[0] as ShelvesetViewModel;
                 var secondSheleveset = pendChangeShelveset;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
 

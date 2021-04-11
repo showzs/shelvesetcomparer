@@ -1,10 +1,10 @@
-﻿// <copyright file="PendingChangeFacade.cs" company="http://shelvesetcomparer.codeplex.com">
-// Copyright http://shelvesetcomparer.codeplex.com. All Rights Reserved. 
+﻿// <copyright file="PendingChangeFacade.cs" company="https://github.com/rajeevboobna/CompareShelvesets">
+// Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. 
 // This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html).
 // This is sample code only, do not use in production environments.
 // </copyright>
 
-namespace WiredTechSolutions.ShelvesetComparer
+namespace DiffFinder
 {
     using Microsoft.TeamFoundation.VersionControl.Client;
     using System;
