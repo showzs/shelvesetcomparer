@@ -270,7 +270,7 @@ namespace DiffFinder
             }
         }
 
-#if FakeShelvesetResult
+#if StubbingWithoutServer
         private ObservableCollection<ShelvesetViewModel> FetchFakedShelveset()
         {
             var result = new ObservableCollection<ShelvesetViewModel>();
