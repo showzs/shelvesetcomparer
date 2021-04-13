@@ -3,6 +3,7 @@
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.Controls;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using Microsoft.TeamFoundation.VersionControl.Controls.Extensibility;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -224,10 +225,21 @@ namespace DiffFinder
                 var vcs = context.TeamProjectCollection.GetService<VersionControlServer>();
                 if (vcs != null)
                 {
-                    var machineName = Environment.MachineName;
-                    var currentUserName = Environment.UserName;
-
-                    var workspace = ws ?? vcs.GetWorkspace(machineName, currentUserName);
+                    var workspace = ws;
+                    if (workspace == null)
+                    {
+                        var pendingChangesService = GetService<IPendingChangesExt>();
+                        if (pendingChangesService != null)
+                        {
+                            workspace = pendingChangesService.Workspace;
+                        }
+                    }
+                    if (workspace == null)
+                    {
+                        var machineName = Environment.MachineName;
+                        var currentUserName = Environment.UserName;
+                        workspace = vcs.GetWorkspace(machineName, currentUserName);
+                    }
 
                     var changes = workspace.GetPendingChanges();//we want to shelve all pending changes in the workspace
 

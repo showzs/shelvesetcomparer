@@ -119,6 +119,8 @@ namespace DiffFinder
         }
 
         /// <summary>
+        /// Menu item callback for "Team - Results view" item.
+        /// 
         /// This function is the callback used to execute the command when the menu item is clicked.
         /// See the constructor to see how the menu item is associated with this function using
         /// OleMenuCommandService service and MenuCommand class.
@@ -127,20 +129,12 @@ namespace DiffFinder
         /// <param name="e">Event args.</param>
         private void ShelvesetComparerResuldIdMenuItemCallback(object sender, EventArgs e)
         {
-            this.ShowResultWindow();
-        }
-
-        /// <summary>
-        /// This function is called when the user clicks the menu item that shows the tool window.
-        /// </summary>
-        /// <param name="sender">The sender object</param>
-        /// <param name="e">Event arguments</param>
-        public void ShowResultWindow()
-        {
             this.ShowComparisonWindow();
         }
 
         /// <summary>
+        /// Menu item callback for "Team - Select view" item.
+        /// 
         /// This function is the callback used to execute the command when the menu item is clicked.
         /// See the constructor to see how the menu item is associated with this function using
         /// OleMenuCommandService service and MenuCommand class.
@@ -154,20 +148,34 @@ namespace DiffFinder
 
         public void NavigateToShelvestComparerPage()
         {
+            TraceOutput("Open TeamExplorer ShelvesetComparer page.");
             var teamExplorer = ServiceProvider.GetService<ITeamExplorer>();
             teamExplorer.NavigateToShelvesetComparer();
         }
 
+        public void TraceOutput(string text)
+        {
+#if TRACE
+            OutputPaneWriteLine(text);
+#endif
+        }
+
         public void OutputPaneWriteLine(string text, bool prefixDateTime = true)
         {
-            var outWindow = ServiceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
+            OutputPaneWriteLine(this.ServiceProvider, text, prefixDateTime);
+        }
+
+        public static void OutputPaneWriteLine(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
+        {
+            var outWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
             if (outWindow == null)
             {
                 return;
             }
 
             // randomly generated GUID to identify the "Shelveset Comparer" output window pane
-            Guid paneGuid = new Guid("{38BFBA25-8AB3-4F8E-B992-930E403AA281}");
+            const string c_ExtensionOutputWindowGuid = "{38BFBA25-8AB3-4F8E-B992-930E403AA281}";
+            Guid paneGuid = new Guid(c_ExtensionOutputWindowGuid);
             IVsOutputWindowPane generalPane = null;
             outWindow.GetPane(ref paneGuid, out generalPane);
             if (generalPane == null)

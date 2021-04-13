@@ -8,6 +8,7 @@ using Microsoft.TeamFoundation.Controls;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Controls.Extensibility;
 using System;
+using System.Linq;
 
 namespace DiffFinder
 {
@@ -41,10 +42,12 @@ namespace DiffFinder
             {
                 if (teamExplorer != null)
                 {
+                    // workspace from IPendingChangesExt for our context
                     teamExplorer.NavigateToPage(new Guid(TeamExplorerPageIds.PendingChanges), null);
-                    var pendingChangesExt = teamExplorer.CurrentPage?.GetExtensibilityService(typeof(IPendingChangesExt)) as IPendingChangesExt;
+                    var pendingChangesExt = teamExplorer.CurrentPageOrUndockedGetExtensibilityService<IPendingChangesExt>();
                     var ws = pendingChangesExt?.Workspace;
 
+                    ShelvesetComparer.Instance.TraceOutput($"Open TeamExplorer ShelvesetComparer page with WS: {ws?.DisplayName ?? "<null>"}");
                     return teamExplorer.NavigateToPage(new Guid(ShelvesetComparerPage.PageId), ws);
                 }
             }
@@ -58,7 +61,52 @@ namespace DiffFinder
 
         public static ShelvesetComparerPage GetCurrentPageAsShelvesetComparerPage(this ITeamExplorer teamExplorer)
         {
-            return teamExplorer?.CurrentPage?.GetExtensibilityService(typeof(ShelvesetComparerPage)) as ShelvesetComparerPage;
+            return teamExplorer.CurrentPageOrUndockedGetExtensibilityService<ShelvesetComparerPage>();
+        }
+
+        public static TService CurrentPageOrUndockedGetExtensibilityService<TService>(this ITeamExplorer teamExplorer) where TService : class
+        {
+            return teamExplorer.CurrentPageOrUndockedGetExtensibilityService<TService, TService>();
+        }
+
+        public static TOut CurrentPageOrUndockedGetExtensibilityService<TService, TOut>(this ITeamExplorer teamExplorer) where TOut : class
+        {
+            if (teamExplorer == null)
+            {
+                return null;
+            }
+
+            var result = teamExplorer?.CurrentPage.GetExtensibilityService<TService, TOut>();
+            if (result == null)
+            {
+                // try undocked pages
+                if (teamExplorer is ITeamExplorerUndockedPageManager undockedManager)
+                {
+                    var undocked = undockedManager.UndockedPages;
+                    if (undocked.Any())
+                    {
+                        result = undocked.Select(p => p.GetExtensibilityService<TService, TOut>())
+                                                .FirstOrDefault(bp => bp != null);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public static TService GetExtensibilityService<TService>(this ITeamExplorerPage page) where TService : class
+        {
+            return GetExtensibilityService<TService, TService>(page);
+        }
+
+        public static TOut GetExtensibilityService<TService, TOut>(this ITeamExplorerPage page) where TOut : class
+        {
+            if (page == null)
+            {
+                return null;
+            }
+
+            return page.GetExtensibilityService(typeof(TService)) as TOut;
         }
     }
 }

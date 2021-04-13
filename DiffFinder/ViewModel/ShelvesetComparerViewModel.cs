@@ -522,7 +522,7 @@ namespace DiffFinder
             {
                 if (firstPendingChange.UploadHashValue != null)
                 {
-                    return firstPendingChange.UploadHashValue.Equals(secondPendingChange.UploadHashValue);
+                    return firstPendingChange.UploadHashValue.SequenceEqual(secondPendingChange.UploadHashValue);
                 }
 
                 using (var firstFileStream = firstPendingChange.DownloadShelvedFile())
