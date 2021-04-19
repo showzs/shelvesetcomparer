@@ -36,17 +36,13 @@
          group as the part of a menu contained between two lines. The parent of a group
          must be a menu. -->
     <Groups>
-      <Group guid="guidShelvesetComparerPackageCmdSet" id="MyMenuGroup" priority="0x0600">
+      <Group guid="guidShelvesetComparerPackageCmdSet" id="IDM_ShelvesetComparer_MENU_TEAM" priority="0x0600">
         <Parent guid="guidVSTeamTopMenu" id="IDM_VS_MENU_TEAM"/>
       </Group>
 
-        <Group guid="guidShelvesetComparerPackageCmdSet" id="MyMenuGroup2" priority="0x0600">
-            <Parent guid="guidVSTeamTopDropDownMenu" id="IDM_VS_TEAM_DROPDOWN"/>
-        </Group>
-
-        <!--<Group guid="guidShelvesetComparerPackageCmdSet2" id="MyMenuGroup2" priority="0x0600">
-            <Parent guid="guidVSTeamTopDropDownMenu" id="IDM_VS_TEAM_DROPDOWN"/>
-        </Group>-->
+      <Group guid="guidShelvesetComparerPackageCmdSet" id="IDM_ShelvesetComparer_TEAM_DROPDOWN" priority="0x0600">
+        <Parent guid="guidVSTeamTopDropDownMenu" id="IDM_VS_TEAM_DROPDOWN"/>
+      </Group>
     </Groups>
 
     <!--Buttons section. -->
@@ -60,31 +56,31 @@
               <CommandFlag>DefaultInvisible</CommandFlag>
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
-      <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerResuldId" priority="0x0100" type="Button">
+      <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerResuldId" priority="0x0101" type="Button">
         <Strings>
           <ButtonText>Diff Finder: Results</ButtonText>
+          <CommandName>DiffFinder.Results</CommandName>
         </Strings>
       </Button>
-	    <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerTeamExplorerViewId" priority="0x0101" type="Button">
+	  <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerTeamExplorerViewId" priority="0x0100" type="Button">
         <Strings>
           <ButtonText>Diff Finder: Select</ButtonText>
+          <CommandName>DiffFinder.Select</CommandName>
         </Strings>
       </Button>
-      
     </Buttons>
-
   </Commands>
 
     <CommandPlacements>
         <CommandPlacement guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerResuldId" priority="0x0100" >
-            <Parent guid="guidShelvesetComparerPackageCmdSet" id="MyMenuGroup"/>
+            <Parent guid="guidShelvesetComparerPackageCmdSet" id="IDM_ShelvesetComparer_MENU_TEAM"/>
         </CommandPlacement>
         <CommandPlacement guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerTeamExplorerViewId" priority="0x0100" >
-            <Parent guid="guidShelvesetComparerPackageCmdSet" id="MyMenuGroup"/>
+            <Parent guid="guidShelvesetComparerPackageCmdSet" id="IDM_ShelvesetComparer_MENU_TEAM"/>
         </CommandPlacement>
 
         <CommandPlacement guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerTeamExplorerViewId" priority="0x0100" >
-            <Parent guid="guidShelvesetComparerPackageCmdSet" id="MyMenuGroup2"/>
+            <Parent guid="guidShelvesetComparerPackageCmdSet" id="IDM_ShelvesetComparer_TEAM_DROPDOWN"/>
         </CommandPlacement>
     </CommandPlacements>
 
@@ -94,8 +90,8 @@
 
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidShelvesetComparerPackageCmdSet" value="{b8e98565-7b6d-4d64-b51d-97fe5e56c5ec}">
-      <IDSymbol name="MyMenuGroup" value="0x1020" />
-      <IDSymbol name="MyMenuGroup2" value="0x1021" />
+      <IDSymbol name="IDM_ShelvesetComparer_MENU_TEAM" value="0x1020" />
+      <IDSymbol name="IDM_ShelvesetComparer_TEAM_DROPDOWN" value="0x1021" />
 
       <IDSymbol name="ShelvesetComparerResuldId" value="0x0100" />
       <IDSymbol name="ShelvesetComparerTeamExplorerViewId" value="0x0200" />
@@ -107,6 +103,6 @@
 
     <GuidSymbol name="guidVSTeamTopDropDownMenu" value="{0A014553-A0AA-46DD-8D6B-B8E3178CA435}">
       <IDSymbol name="IDM_VS_TEAM_DROPDOWN" value="4098" />
-    </GuidSymbol>    
+    </GuidSymbol>
   </Symbols>
 </CommandTable>
