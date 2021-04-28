@@ -170,6 +170,9 @@ namespace DiffFinder
             }
             catch (Exception ex)
             {
+                // write full exception to output
+                ShelvesetComparer.Instance?.OutputPaneWriteLine(ex.ToString());
+
                 this.ShowError(ex.Message);
             }
         }
@@ -203,6 +206,7 @@ namespace DiffFinder
             }
             catch (Exception ex)
             {
+                // write full exception to output
                 ShelvesetComparer.Instance?.OutputPaneWriteLine(ex.ToString());
 
                 this.ShowError(ex.Message);

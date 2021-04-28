@@ -56,23 +56,23 @@
               <CommandFlag>DefaultInvisible</CommandFlag>
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
-      <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerResuldId" priority="0x0101" type="Button">
+      <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerResuldId" type="Button">
         <Strings>
           <ButtonText>Diff Finder: Results</ButtonText>
-          <CommandName>DiffFinder.Results</CommandName>
+          <CommandName>DiffFinderResults</CommandName>
         </Strings>
       </Button>
-	  <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerTeamExplorerViewId" priority="0x0100" type="Button">
+	  <Button guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerTeamExplorerViewId" type="Button">
         <Strings>
           <ButtonText>Diff Finder: Select</ButtonText>
-          <CommandName>DiffFinder.Select</CommandName>
+          <CommandName>DiffFinderSelect</CommandName>
         </Strings>
       </Button>
     </Buttons>
   </Commands>
 
     <CommandPlacements>
-        <CommandPlacement guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerResuldId" priority="0x0100" >
+        <CommandPlacement guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerResuldId" priority="0x0101" >
             <Parent guid="guidShelvesetComparerPackageCmdSet" id="IDM_ShelvesetComparer_MENU_TEAM"/>
         </CommandPlacement>
         <CommandPlacement guid="guidShelvesetComparerPackageCmdSet" id="ShelvesetComparerTeamExplorerViewId" priority="0x0100" >

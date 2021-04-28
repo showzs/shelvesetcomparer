@@ -1,4 +1,5 @@
 ﻿// <copyright file="AssemblyInfo.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
+
 #if DEBUG
 
 // activate to get fake shelvest results with delay for debugging
@@ -17,7 +18,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("DiffFinder")]
 [assembly: AssemblyDescription("Visual Studio extension for comparing shelvesets.")]
-[assembly: AssemblyCompany("Rajeev Boobna")]
+[assembly: AssemblyCompany("Rajeev Boobna and dprZoft")]
 [assembly: AssemblyProduct("DiffFinder")]
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]

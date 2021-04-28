@@ -153,6 +153,10 @@ namespace DiffFinder
             teamExplorer.NavigateToShelvesetComparer();
         }
 
+        /// <summary>
+        /// Write to output (only if trace is enabled)
+        /// </summary>
+        /// <param name="text"></param>
         public void TraceOutput(string text)
         {
 #if TRACE
@@ -160,6 +164,9 @@ namespace DiffFinder
 #endif
         }
 
+        /// <summary>
+        /// Write to output window
+        /// </summary>
         public void OutputPaneWriteLine(string text, bool prefixDateTime = true)
         {
             OutputPaneWriteLine(this.ServiceProvider, text, prefixDateTime);
