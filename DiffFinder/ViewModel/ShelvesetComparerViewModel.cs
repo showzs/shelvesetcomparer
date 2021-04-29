@@ -381,6 +381,7 @@ namespace DiffFinder
                 .Select(pc => new PendingChangeFacade(pc)).ToArray<IPendingChange>();
 
 #else
+            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake pending changes for easier debugging.");
             if (shelveset.Name.Equals("Shelveset1"))
             {
                 return new List<IPendingChange>() 

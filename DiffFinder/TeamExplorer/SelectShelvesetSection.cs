@@ -281,8 +281,13 @@ namespace DiffFinder
         }
 
 #if StubbingWithoutServer
-        private ObservableCollection<ShelvesetViewModel> FetchFakedShelveset()
+        /// <summary>
+        /// Debugging replacement for <see cref="FetchShevlesets(string, string, ITeamFoundationContext)"/> which replaces hard coded list of shelvesets to enable fast debugging without server.
+        /// </summary>
+        private static ObservableCollection<ShelvesetViewModel> FetchFakedShelveset()
         {
+            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake shelveset list for easier debugging.");
+
             var result = new ObservableCollection<ShelvesetViewModel>();
             for(var idx=0; idx < 1111; idx++)
             {

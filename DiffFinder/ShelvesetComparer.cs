@@ -1,4 +1,4 @@
-﻿// <copyright file="SelectShelvesetTeamExplorerView.xaml.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
+﻿// <copyright file="ShelvesetComparer.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
 
 using Microsoft.TeamFoundation.Controls;
 using Microsoft.VisualStudio.Shell;
@@ -56,9 +56,8 @@ namespace DiffFinder
             }
 
             this.package = package;
-#if DEBUG
-            this.OutputPaneWriteLine("Loading ..");
-#endif
+            
+            TraceOutput("Initializing Package ..");
 
             OleMenuCommandService commandService = this.ServiceProvider.GetService<IMenuCommandService, OleMenuCommandService>();
             if (commandService != null)
@@ -72,9 +71,7 @@ namespace DiffFinder
                 commandService.AddCommand(menuItem);
             }
 
-#if DEBUG
-            this.OutputPaneWriteLine("Loading finished.");
-#endif
+            TraceOutput("Package initialized.");
         }
 
         /// <summary>
@@ -106,6 +103,9 @@ namespace DiffFinder
             Instance = new ShelvesetComparer(package);
         }
 
+        /// <summary>
+        /// Open and show ShelvesetComparer result window.
+        /// </summary>
         public void ShowComparisonWindow()
         {
             ToolWindowPane window = package.FindToolWindow(typeof(ShelvesetComparerToolWindow), 0, true);
@@ -146,17 +146,18 @@ namespace DiffFinder
             NavigateToShelvestComparerPage();
         }
 
+        /// <summary>
+        /// Open ShelvesetComparer select page in TeamExplorer
+        /// </summary>
         public void NavigateToShelvestComparerPage()
         {
-            TraceOutput("Open TeamExplorer ShelvesetComparer page.");
             var teamExplorer = ServiceProvider.GetService<ITeamExplorer>();
             teamExplorer.NavigateToShelvesetComparer();
         }
 
         /// <summary>
-        /// Write to output (only if trace is enabled)
+        /// Write trace to output (only if trace is enabled)
         /// </summary>
-        /// <param name="text"></param>
         public void TraceOutput(string text)
         {
 #if TRACE
@@ -165,13 +166,16 @@ namespace DiffFinder
         }
 
         /// <summary>
-        /// Write to output window
+        /// Write to own output pane in output window with optional DateTime prefix and activate pane afterwards.
         /// </summary>
         public void OutputPaneWriteLine(string text, bool prefixDateTime = true)
         {
             OutputPaneWriteLine(this.ServiceProvider, text, prefixDateTime);
         }
 
+        /// <summary>
+        /// Write text with optional DateTime prefix to own output pane (create if not existing) and activate pane afterwards.
+        /// </summary>
         public static void OutputPaneWriteLine(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
         {
             var outWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
