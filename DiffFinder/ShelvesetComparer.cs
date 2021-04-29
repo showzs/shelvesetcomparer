@@ -192,7 +192,7 @@ namespace DiffFinder
             if (generalPane == null)
             {
                 // the pane doesn't already exist
-                outWindow.CreatePane(ref paneGuid, DiffFinder.Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
+                outWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
                 outWindow.GetPane(ref paneGuid, out generalPane);
             }
 
