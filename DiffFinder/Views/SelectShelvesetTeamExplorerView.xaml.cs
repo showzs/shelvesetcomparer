@@ -170,6 +170,8 @@ namespace DiffFinder
             }
             catch (Exception ex)
             {
+                ShelvesetComparer.Instance?.OutputPaneWriteLine(ex.ToString());
+
                 this.ShowError(ex.Message);
             }
         }
