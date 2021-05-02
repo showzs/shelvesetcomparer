@@ -42,7 +42,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FakeShelvesetResult</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;StubbingWithoutServer</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -50,7 +50,8 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -74,6 +75,9 @@
     <Compile Include="TeamExplorer\ShelvesetComparerNavigationLink.cs" />
     <Compile Include="TeamExplorer\ShelvesetComparerNavigationLinkItem.cs" />
     <Compile Include="TeamExplorer\ShelvesetComparerPage.cs" />
+    <Compile Include="ViewModel\IPendingChange.cs" />
+    <Compile Include="ViewModel\PendingChangeFacade.cs" />
+    <Compile Include="ViewModel\PendingChangeFacadeStub.cs" />
     <Compile Include="ViewModel\ShelvesetViewModel.cs" />
     <Compile Include="TeamExplorer\ShelvesetsContext.cs" />
     <Compile Include="ViewExtensions\UserControlMaxHeightMultiValueConverter.cs" />
@@ -95,6 +99,12 @@
       <ManifestResourceName>VSPackage</ManifestResourceName>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <Content Include="..\LICENSE">
+      <Link>LICENSE</Link>
+    </Content>
+    <None Include="..\README.md">
+      <Link>README.md</Link>
+    </None>
     <None Include="app.config" />
     <None Include="packages.config" />
     <Content Include="Resources\License.rtf">

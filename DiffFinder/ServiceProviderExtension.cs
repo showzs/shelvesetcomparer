@@ -1,4 +1,4 @@
-﻿// <copyright file="TeamExplorerExtensions.cs" company="https://github.com/dprZoft/shelvesetcomparer">
+﻿// <copyright file="ServiceProviderExtension.cs" company="https://github.com/dprZoft/shelvesetcomparer">
 // Copyright https://github.com/dprZoft/shelvesetcomparer, 2021. All Rights Reserved. 
 // This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html). 
 // This is sample code only, do not use in production environments.
@@ -10,15 +10,21 @@ namespace DiffFinder
 {
     public static class ServiceProviderExtension
     {
-        public static T GetService<T>(this IServiceProvider serviceProvider) where T : class
+        public static TService GetService<TService>(this IServiceProvider serviceProvider) where TService : class
         {
-            return serviceProvider.GetService<T, T>();
+            return serviceProvider.GetService<TService, TService>();
         }
 
-        public static TOut GetService<TIn, TOut>(this IServiceProvider serviceProvider) where TIn : class
-                                                                                        where TOut : class
+        public static TOut GetService<TService, TOut>(this IServiceProvider serviceProvider) where TOut : class
         {
-            return serviceProvider.GetService(typeof(TIn)) as TOut ?? throw new InvalidOperationException($"Internal error: Interface '{typeof(TOut).Name}' is not available");
+            var service = serviceProvider.GetService(typeof(TService));
+            if (service == null)
+            {
+                throw new InvalidOperationException($"Internal error: Service '{typeof(TService).Name}' is not available");
+            }
+
+            return service as TOut
+                ?? throw new InvalidCastException($"Internal error: Cannot cast '{typeof(TService).Name}' to '{typeof(TOut).Name}'");
         }
     }
 }

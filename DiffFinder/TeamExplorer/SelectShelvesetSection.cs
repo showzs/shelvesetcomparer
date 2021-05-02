@@ -1,10 +1,9 @@
 ﻿// <copyright file="SelectShelvesetSection.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
 
-//#define FakeShelvesetResult // activate to get fake shelvest results with delay for debugging
-
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.Controls;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using Microsoft.TeamFoundation.VersionControl.Controls.Extensibility;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -143,7 +142,7 @@ namespace DiffFinder
             // Make the server call asynchronously to avoid blocking the UI
             var fetchShelvesetsTask = Task.Run(() =>
             {
-#if FakeShelvesetResult
+#if StubbingWithoutServer
                 return FetchFakedShelveset();
 #else
                 return FetchShevlesets(this.FirstUserAccountName, this.SecondUserAccountName, this.CurrentContext);
@@ -219,17 +218,28 @@ namespace DiffFinder
         /// Retrieves the shelveset for pending change for the current user 
         /// </summary>
         /// <param name="context">The Team foundation server context</param>
-        internal Shelveset FetchPendingChangeShelveset(ITeamFoundationContext context, Workspace ws = null)
+        internal ShelvesetViewModel FetchPendingChangeShelveset(ITeamFoundationContext context, Workspace ws = null)
         {
             if (context != null && context.HasCollection && context.HasTeamProject)
             {
                 var vcs = context.TeamProjectCollection.GetService<VersionControlServer>();
                 if (vcs != null)
                 {
-                    var machineName = Environment.MachineName;
-                    var currentUserName = Environment.UserName;
-
-                    var workspace = ws ?? vcs.GetWorkspace(machineName, currentUserName);
+                    var workspace = ws;
+                    if (workspace == null)
+                    {
+                        var pendingChangesService = GetService<IPendingChangesExt>();
+                        if (pendingChangesService != null)
+                        {
+                            workspace = pendingChangesService.Workspace;
+                        }
+                    }
+                    if (workspace == null)
+                    {
+                        var machineName = Environment.MachineName;
+                        var currentUserName = Environment.UserName;
+                        workspace = vcs.GetWorkspace(machineName, currentUserName);
+                    }
 
                     var changes = workspace.GetPendingChanges();//we want to shelve all pending changes in the workspace
 
@@ -240,7 +250,7 @@ namespace DiffFinder
                         workspace.Shelve(pendChange, changes, ShelvingOptions.Replace);//you can specify to replace existing shelveset, or to remove pending changes from the local workspace with ShelvingOptions
                         pendChange.CreationDate = DateTime.Now;
 
-                        return pendChange;
+                        return new ShelvesetViewModel(pendChange);
                     }
                 }
             }
@@ -270,9 +280,14 @@ namespace DiffFinder
             }
         }
 
-#if FakeShelvesetResult
-        private ObservableCollection<ShelvesetViewModel> FetchFakedShelveset()
+#if StubbingWithoutServer
+        /// <summary>
+        /// Debugging replacement for <see cref="FetchShevlesets(string, string, ITeamFoundationContext)"/> which replaces hard coded list of shelvesets to enable fast debugging without server.
+        /// </summary>
+        private static ObservableCollection<ShelvesetViewModel> FetchFakedShelveset()
         {
+            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake shelveset list for easier debugging.");
+
             var result = new ObservableCollection<ShelvesetViewModel>();
             for(var idx=0; idx < 1111; idx++)
             {

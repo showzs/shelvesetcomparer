@@ -1,4 +1,4 @@
-﻿﻿// <copyright file="SelectShelvesetTeamExplorerView.xaml.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
+﻿// <copyright file="SelectShelvesetTeamExplorerView.xaml.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
 
 using EnvDTE;
 using Microsoft.TeamFoundation.Client;
@@ -162,14 +162,15 @@ namespace DiffFinder
                     return;
                 }
                 
-                var firstSheleveset = CastAsShelveset(this.ListShelvesets.SelectedItems[0]);
-                var secondSheleveset = CastAsShelveset(this.ListShelvesets.SelectedItems[1]);
+                var firstSheleveset = this.ListShelvesets.SelectedItems[0] as ShelvesetViewModel;
+                var secondSheleveset = this.ListShelvesets.SelectedItems[1] as ShelvesetViewModel;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
 
                 ShelvesetComparer.Instance.ShowComparisonWindow();
             }
             catch (Exception ex)
             {
+                // write full exception to output
                 ShelvesetComparer.Instance?.OutputPaneWriteLine(ex.ToString());
 
                 this.ShowError(ex.Message);
@@ -197,7 +198,7 @@ namespace DiffFinder
                 var page = parent.TeamExplorer.GetCurrentPageAsShelvesetComparerPage();
                 var pendChangeShelveset = parent.FetchPendingChangeShelveset(this.ParentSection.Context, page?.CurrentWorkspace);
                 
-                var firstSheleveset = this.ListShelvesets.SelectedItems[0] as Shelveset;
+                var firstSheleveset = this.ListShelvesets.SelectedItems[0] as ShelvesetViewModel;
                 var secondSheleveset = pendChangeShelveset;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
 
@@ -205,6 +206,7 @@ namespace DiffFinder
             }
             catch (Exception ex)
             {
+                // write full exception to output
                 ShelvesetComparer.Instance?.OutputPaneWriteLine(ex.ToString());
 
                 this.ShowError(ex.Message);
@@ -253,6 +255,11 @@ namespace DiffFinder
             }
         }
 
+        /// <summary>
+        /// Cast given item to <see cref="ShelvesetViewModel"/> and return wrapped MS <see cref="Shelveset"/>.
+        /// </summary>
+        /// <param name="listViewSelectedItem">Object to cast and get Shelveset from</param>
+        /// <returns>Wraped <see cref="Shelveset"/> or null</returns>
         private static Shelveset CastAsShelveset(object listViewSelectedItem)
         {
             return (listViewSelectedItem as ShelvesetViewModel)?.Shelveset;
