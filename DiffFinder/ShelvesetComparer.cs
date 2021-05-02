@@ -56,6 +56,9 @@ namespace DiffFinder
             }
 
             this.package = package;
+#if DEBUG
+            this.OutputPaneWriteLine("Loading ..");
+#endif
 
             OleMenuCommandService commandService = this.ServiceProvider.GetService<IMenuCommandService, OleMenuCommandService>();
             if (commandService != null)
@@ -68,6 +71,10 @@ namespace DiffFinder
                 menuItem = new MenuCommand(this.ShelvesetComparerTeamExplorerViewIdMenuItemCallback, menuCommandID);
                 commandService.AddCommand(menuItem);
             }
+
+#if DEBUG
+            this.OutputPaneWriteLine("Loading finished.");
+#endif
         }
 
         /// <summary>
@@ -82,7 +89,7 @@ namespace DiffFinder
         /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
-        public IServiceProvider ServiceProvider
+        private IServiceProvider ServiceProvider
         {
             get
             {
@@ -149,6 +156,33 @@ namespace DiffFinder
         {
             var teamExplorer = ServiceProvider.GetService<ITeamExplorer>();
             teamExplorer.NavigateToShelvesetComparer();
+        }
+
+        public void OutputPaneWriteLine(string text, bool prefixDateTime = true)
+        {
+            IVsOutputWindow outWindow = ServiceProvider.GetService<SVsOutputWindow>() as IVsOutputWindow;
+            if (outWindow == null)
+            {
+                return;
+            }
+
+            // randomly generated GUID to identify the "Shelveset Comparer" output window pane
+            Guid paneGuid = new Guid("{38BFBA25-8AB3-4F8E-B992-930E403AA281}");
+            IVsOutputWindowPane generalPane = null;
+            outWindow.GetPane(ref paneGuid, out generalPane);
+            if (generalPane == null)
+            {
+                // the pane doesn't already exist
+                outWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
+                outWindow.GetPane(ref paneGuid, out generalPane);
+            }
+
+            if (prefixDateTime)
+            {
+                text = $"{DateTime.Now:G} {text}";
+            }
+            generalPane.OutputString(text + Environment.NewLine);
+            generalPane.Activate();
         }
     }
 }

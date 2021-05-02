@@ -6,6 +6,7 @@ using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.Controls;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -281,7 +282,7 @@ namespace DiffFinder
                     "Owner" + (idx % 2)));
             }
 
-            Task.Delay(1500); // for some time consuming operation, to show UI response
+            System.Threading.Thread.Sleep(1500); // for some time consuming operation, to show UI response
 
             return result;
         }
