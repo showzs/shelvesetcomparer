@@ -4,12 +4,12 @@
         <Identity Id="c3b55d75-8ea6-3936-a8853-1d105zd38z19" Version="1.0.3.19" Language="en-US" Publisher="Rajeev Boobna and dprZoft" />
         <DisplayName>DiffFinder</DisplayName>
         <Description xml:space="preserve">The extension allows you to compare files in two shelvesets.
-based on https://github.com/rajeevboobna/CompareShelvesets.
+based on https://github.com/rajeevboobna/CompareShelvesets and https://github.com/hamidshahid/shelvesetcomparer .
 improved in https://github.com/dprZoft/shelvesetcomparer</Description>
         <MoreInfo>https://github.com/dprZoft/shelvesetcomparer</MoreInfo>
         <License>Resources\License.rtf</License>
         <ReleaseNotes>README.md</ReleaseNotes>
-        <Tags>Shelveset, Comparison, Team Explorer</Tags>
+        <Tags>Shelveset, Comparison, Team Explorer, VS2019, 2019</Tags>
     </Metadata>
     <Installation>
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
