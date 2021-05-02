@@ -264,7 +264,7 @@ namespace DiffFinder
                 return;
             }
 
-            IVsOutputWindow outWindow = ShelvesetComparer.Instance.GetService<SVsOutputWindow>() as IVsOutputWindow;
+            IVsOutputWindow outWindow = ShelvesetComparer.Instance.ServiceProvider.GetService<SVsOutputWindow>() as IVsOutputWindow;
 
             // randomly generated GUID to identify the "Shelveset Comparer" output window pane
             Guid paneGuid = new Guid("{38BFBA25-8AB3-4F8E-B992-930E403AA281}");
@@ -273,7 +273,7 @@ namespace DiffFinder
             if (generalPane == null)
             {
                 // the pane doesn't already exist
-                outWindow.CreatePane(ref paneGuid, WiredTechSolutions.ShelvesetComparer.Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
+                outWindow.CreatePane(ref paneGuid, DiffFinder.Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
                 outWindow.GetPane(ref paneGuid, out generalPane);
             }
 
