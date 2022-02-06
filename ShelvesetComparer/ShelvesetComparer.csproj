@@ -131,9 +131,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ReferenceVS2022\Microsoft.TeamFoundation.VersionControl.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.TeamFoundation">
       <HintPath>..\ReferenceVS2022\Microsoft.VisualStudio.TeamFoundation.dll</HintPath>
     </Reference>
@@ -196,7 +193,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.SDK">
-      <Version>17.0.31902.203</Version>
+      <Version>17.0.32112.339</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools">
       <Version>17.0.5234</Version>
