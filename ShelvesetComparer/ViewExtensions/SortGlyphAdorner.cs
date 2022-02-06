@@ -15,17 +15,17 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// The underlying column  header.
         /// </summary>
-        private GridViewColumnHeader columnHeader;
+        private readonly GridViewColumnHeader columnHeader;
 
         /// <summary>
         /// The current sort direction
         /// </summary>
-        private ListSortDirection direction;
+        private readonly ListSortDirection direction;
 
         /// <summary>
         /// The Image glyph to be shown on column
         /// </summary>
-        private ImageSource sortGlyph;
+        private readonly ImageSource sortGlyph;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SortGlyphAdorner"/> class.
@@ -81,14 +81,18 @@ namespace WiredTechSolutions.ShelvesetComparer
                 y2 = tmp;
             }
 
-            PathSegmentCollection pathSegmentCollection = new PathSegmentCollection();
-            pathSegmentCollection.Add(new LineSegment(new Point(x2, y1), true));
-            pathSegmentCollection.Add(new LineSegment(new Point(x3, y2), true));
+            PathSegmentCollection pathSegmentCollection = new PathSegmentCollection
+            {
+                new LineSegment(new Point(x2, y1), true),
+                new LineSegment(new Point(x3, y2), true)
+            };
 
             PathFigure pathFigure = new PathFigure(new Point(x1, y1), pathSegmentCollection, true);
 
-            PathFigureCollection pathFigureCollection = new PathFigureCollection();
-            pathFigureCollection.Add(pathFigure);
+            PathFigureCollection pathFigureCollection = new PathFigureCollection
+            {
+                pathFigure
+            };
 
             PathGeometry pathGeometry = new PathGeometry(pathFigureCollection);
             return pathGeometry;

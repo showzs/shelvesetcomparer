@@ -4,6 +4,7 @@ namespace WiredTechSolutions.ShelvesetComparer
     using System;
     using System.ComponentModel.Design;
     using System.Globalization;
+    using System.Threading.Tasks;
     using Microsoft.TeamFoundation.Controls;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
@@ -36,12 +37,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <param name="package">Owner package, not null.</param>
         private ShelvesetComparer(Package package)
         {
-            if (package == null)
-            {
-                throw new ArgumentNullException(nameof(package));
-            }
-
-            this.package = package;
+            this.package = package ?? throw new ArgumentNullException(nameof(package));
 #if DEBUG
             this.OutputPaneWriteLine("Loading ..");
 #endif
@@ -93,8 +89,13 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// Open and show ShelvesetComparer result window.
         /// </summary>
-        public void ShowComparisonWindow()
+        public async Task ShowComparisonWindowAsync()
         {
+            if (! ThreadHelper.CheckAccess())
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
             ToolWindowPane window = package.FindToolWindow(typeof(ShelvesetComparerToolWindow), 0, true);
             if ((null == window) || (null == window.Frame))
             {
@@ -116,7 +117,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <param name="e">Event args.</param>
         private void ShelvesetComparerResuldIdMenuItemCallback(object sender, EventArgs e)
         {
-            this.ShowComparisonWindow();
+            this.ShowComparisonWindowAsync().GetResultNoContext();
         }
 
         /// <summary>
@@ -165,30 +166,54 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         public static void OutputPaneWriteLine(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
         {
-            var outWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
-            if (outWindow == null)
+            OutputPaneWriteLineAsync(serviceProvider, text, prefixDateTime).GetResultNoContext();
+        }
+
+        /// <summary>
+        /// Write text with optional DateTime prefix to own output pane (create if not existing) and activate pane afterwards.
+        /// </summary>
+        public static async Task OutputPaneWriteLineAsync(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
+        {
+            if (! ThreadHelper.CheckAccess())
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
+            var vsOutputWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
+            if (vsOutputWindow == null)
             {
                 return;
             }
 
-            // randomly generated GUID to identify the "Shelveset Comparer" output window pane
-            const string c_ExtensionOutputWindowGuid = "{38BFBA25-8AB3-4F8E-B992-930E403AA281}";
-            Guid paneGuid = new Guid(c_ExtensionOutputWindowGuid);
-            IVsOutputWindowPane generalPane = null;
-            outWindow.GetPane(ref paneGuid, out generalPane);
-            if (generalPane == null)
+            var paneGuid = new Guid(c_ExtensionOutputWindowGuid);
+            // get 
+            var result = vsOutputWindow.GetPane(ref paneGuid, out var extensionOutputWindow);
+            if (result != Microsoft.VisualStudio.VSConstants.S_OK || extensionOutputWindow == null)
             {
                 // the pane doesn't already exist
-                outWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
-                outWindow.GetPane(ref paneGuid, out generalPane);
+                result = vsOutputWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
+                if (result == Microsoft.VisualStudio.VSConstants.S_OK)
+                {
+                    result = vsOutputWindow.GetPane(ref paneGuid, out extensionOutputWindow);
+                }
+            }
+            if (result == Microsoft.VisualStudio.VSConstants.S_OK)
+            {
+                result = extensionOutputWindow.Activate();
             }
 
             if (prefixDateTime)
             {
                 text = $"{DateTime.Now:G} {text}";
             }
-            generalPane.OutputString(text + Environment.NewLine);
-            generalPane.Activate();
+            result = extensionOutputWindow.OutputStringThreadSafe(text + Environment.NewLine);
+            //if (result != Microsoft.VisualStudio.VSConstants.S_OK)
+            //{
+            //    // TODO
+            //}
         }
+
+        // randomly generated GUID to identify the "Shelveset Comparer" output window pane
+        private const string c_ExtensionOutputWindowGuid = "{38BFBA25-8AB3-4F8E-B992-930E403AA281}";
     }
 }

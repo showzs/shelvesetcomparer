@@ -7,6 +7,7 @@ namespace WiredTechSolutions.ShelvesetComparer
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
+    using Microsoft.VisualStudio.Shell;
     using Microsoft.Win32;
 
     /// <summary>
@@ -43,12 +44,21 @@ namespace WiredTechSolutions.ShelvesetComparer
             {
                 if (string.IsNullOrWhiteSpace(visualStudioVersion))
                 {
-                    var dte = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE80.DTE2;
-                    visualStudioVersion = dte.SourceControl.Parent.Version;
+                    visualStudioVersion = GetVisualStudioVersionAsync().GetResultNoContext();
                 }
 
                 return visualStudioVersion;
             }
+        }
+
+        private static async System.Threading.Tasks.Task<string> GetVisualStudioVersionAsync()
+        {
+            if (! ThreadHelper.CheckAccess())
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+            var dte = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE80.DTE2;
+            return dte.SourceControl.Parent.Version;
         }
 
         /// <summary>
@@ -85,10 +95,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                 compareFiles.SecondFile.DownloadShelvedFile(secondFileName);
             }
 
-            string diffToolCommandArguments = string.Empty;
-            string diffToolCommand = string.Empty;
-
-            GetExternalTool(Path.GetExtension(compareFiles.FirstFile.FileName), out diffToolCommand, out diffToolCommandArguments);
+            GetExternalTool(Path.GetExtension(compareFiles.FirstFile.FileName), out var diffToolCommand, out var diffToolCommandArguments);
 
             if (string.IsNullOrWhiteSpace(diffToolCommand))
             {
@@ -144,12 +151,10 @@ namespace WiredTechSolutions.ShelvesetComparer
         {
             if (e != null && e.ChangedButton == MouseButton.Left)
             {
-                var compareFiles = this.ComparisonFiles.SelectedItem as FileComparisonViewModel;
-
-                if (compareFiles != null)
+                if (this.ComparisonFiles.SelectedItem is FileComparisonViewModel compareFiles)
                 {
                     CompareFiles(compareFiles);
-                }            
+                }
             }
         }
 
@@ -162,11 +167,10 @@ namespace WiredTechSolutions.ShelvesetComparer
         {
             if (e != null && e.Key == Key.Enter)
             {
-                var compareFiles = this.ComparisonFiles.SelectedItem as FileComparisonViewModel;
-                if (compareFiles != null)
+                if (this.ComparisonFiles.SelectedItem is FileComparisonViewModel compareFiles)
                 {
                     CompareFiles(compareFiles);
-                }            
+                }
             }
         }
 

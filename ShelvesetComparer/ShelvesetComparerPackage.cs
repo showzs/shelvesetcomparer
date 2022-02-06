@@ -60,11 +60,8 @@ namespace WiredTechSolutions.ShelvesetComparer
         protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
-            await JoinableTaskFactory.Run(async delegate {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-                ShelvesetComparer.Initialize(this);
-                return System.Threading.Tasks.Task.FromResult<object>(null) ;
-            });
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            ShelvesetComparer.Initialize(this);
             return;
         }
 

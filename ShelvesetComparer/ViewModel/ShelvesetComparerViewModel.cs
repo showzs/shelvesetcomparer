@@ -67,7 +67,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// The service provider
         /// </summary>
-        private IServiceProvider serviceProvider;
+        private readonly IServiceProvider serviceProvider;
 
         /// <summary>
         /// First Shelveset Name
@@ -82,7 +82,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// The collection of files
         /// </summary>
-        private ObservableCollection<FileComparisonViewModel> files;
+        private readonly ObservableCollection<FileComparisonViewModel> files;
 
         /// <summary>
         /// The filter of files
@@ -120,13 +120,23 @@ namespace WiredTechSolutions.ShelvesetComparer
             {
                 if (instance == null)
                 {
-                    var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
-                    var serviceProvider = new ServiceProvider(dte2.DTE as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-                    instance = new ShelvesetComparerViewModel(serviceProvider);
+                    CreateInstanceAsync().GetResultNoContext();
                 }
 
                 return instance;
             }
+        }
+
+        private static async System.Threading.Tasks.Task CreateInstanceAsync()
+        {
+            if (! ThreadHelper.CheckAccess())
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
+            var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
+            var serviceProvider = new ServiceProvider(dte2.DTE as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
+            instance = new ShelvesetComparerViewModel(serviceProvider);
         }
 
         /// <summary>
@@ -313,7 +323,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             {
                 var matchingFile = FindMatchingChangeInOtherPendingChanges(pendingChange, secondShelvesetChanges);
 
-                bool sameContent = matchingFile != null ? AreFilesInPendingChangesSame(pendingChange, matchingFile) : false;
+                bool sameContent = matchingFile != null && AreFilesInPendingChangesSame(pendingChange, matchingFile);
                 FileComparisonViewModel comparisonItem = new FileComparisonViewModel()
                 {
                     FirstFile  = pendingChange,
@@ -561,7 +571,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                 return (T)this.serviceProvider.GetService(typeof(T));
             }
 
-            return default(T);
+            return default;
         }
 
         /// <summary>
@@ -570,11 +580,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <param name="propertyName">The property for which the event needs to be raised</param>
         private void NotifyPropertyChanged(string propertyName)
         {
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (null != handler)
-            {
-                handler(this, new PropertyChangedEventArgs(propertyName));
-            }
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
