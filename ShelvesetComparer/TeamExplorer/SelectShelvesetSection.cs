@@ -103,8 +103,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             try
             {
                 base.Initialize(sender, e);
-                var sectionContext = e.Context as ShelvesetsContext;
-                if (sectionContext != null)
+                if (e.Context is ShelvesetsContext sectionContext)
                 {
                     ShelvesetsContext context = sectionContext;
                     this.Shelvesets = context.Shelvesets;

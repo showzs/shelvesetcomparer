@@ -195,7 +195,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                 var firstSheleveset = this.ListShelvesets.SelectedItems[0] as ShelvesetViewModel;
                 var secondSheleveset = this.ListShelvesets.SelectedItems[1] as ShelvesetViewModel;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
-                ShelvesetComparer.Instance.ShowComparisonWindowAsync().GetResultNoContext();
+                ShelvesetComparer.Instance.ShowComparisonToolWindow();
             }
             catch (Exception ex)
             {
