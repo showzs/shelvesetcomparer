@@ -38,9 +38,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         private ShelvesetComparer(AsyncPackage package)
         {
             this.package = package ?? throw new ArgumentNullException(nameof(package));
-#if DEBUG
-            this.OutputPaneWriteLine("Loading ..");
-#endif
+            TraceOutput("Loading ..");
 
             OleMenuCommandService commandService = this.ServiceProvider.GetService<IMenuCommandService, OleMenuCommandService>();
             if (commandService != null)
