@@ -392,7 +392,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                 .Select(pc => new PendingChangeFacade(pc)).ToArray<IPendingChange>();
 
 #else
-            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake pending changes for easier debugging.");
+            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake pending changes for easier debugging (file lists for Shelveset1, Shelveset2, Shelveset3).");
             if (shelveset.Name.Equals("Shelveset1"))
             {
                 return new List<IPendingChange>() 
