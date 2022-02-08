@@ -4,6 +4,7 @@ namespace WiredTechSolutions.ShelvesetComparer
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
@@ -51,16 +52,6 @@ namespace WiredTechSolutions.ShelvesetComparer
             }
         }
 
-        private static async System.Threading.Tasks.Task<string> GetVisualStudioVersionAsync()
-        {
-            if (! ThreadHelper.CheckAccess())
-            {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-            }
-            var dte = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE80.DTE2;
-            return dte.SourceControl.Parent.Version;
-        }
-
         /// <summary>
         /// Gets or sets the ComparisonModel
         /// </summary>
@@ -78,6 +69,21 @@ namespace WiredTechSolutions.ShelvesetComparer
         }
 
         /// <summary>
+        /// Get Visual Studio version (enforcing Main UI Thread if required)
+        /// </summary>
+        /// <returns></returns>
+        private static async Task<string> GetVisualStudioVersionAsync()
+        {
+            if (! ThreadHelper.CheckAccess())
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
+            var dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE80.DTE2;
+            return dte.SourceControl.Parent.Version;
+        }
+
+        /// <summary>
         /// The method opens up a window comparing two files
         /// </summary>
         /// <param name="compareFiles">The compare files view model</param>
@@ -85,17 +91,20 @@ namespace WiredTechSolutions.ShelvesetComparer
         {   
             string firstFileName = Path.GetTempFileName();
             string secondFileName = Path.GetTempFileName();
+            var extension = string.Empty;
             if (compareFiles.FirstFile != null)
             {
                 compareFiles.FirstFile.DownloadShelvedFile(firstFileName);
+                extension = Path.GetExtension(compareFiles.FirstFile.FileName);
             }
 
             if (compareFiles.SecondFile != null)
             {
                 compareFiles.SecondFile.DownloadShelvedFile(secondFileName);
+                extension = Path.GetExtension(compareFiles.SecondFile.FileName);
             }
 
-            GetExternalTool(Path.GetExtension(compareFiles.FirstFile.FileName), out var diffToolCommand, out var diffToolCommandArguments);
+            GetExternalTool(extension, out var diffToolCommand, out var diffToolCommandArguments);
 
             if (string.IsNullOrWhiteSpace(diffToolCommand))
             {
