@@ -50,7 +50,7 @@ namespace DiffFinder
             get
             {
                 ITeamFoundationContextManager tfcontextManager = this.GetService<ITeamFoundationContextManager>();
-                return tfcontextManager != null ? tfcontextManager.CurrentContext : null;
+                return tfcontextManager?.CurrentContext;
             }
         }
 
@@ -63,7 +63,7 @@ namespace DiffFinder
                 return (T)this.ServiceProvider.GetService(typeof(T));
             }
 
-            return default(T);
+            return default;
         }
 
         public void Dispose()
@@ -90,7 +90,7 @@ namespace DiffFinder
         {
             if (this.PropertyChanged != null)
             {
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
 

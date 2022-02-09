@@ -57,15 +57,40 @@ namespace DiffFinder
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
         /// </summary>
-        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             await base.InitializeAsync(cancellationToken, progress);
-            await JoinableTaskFactory.Run(async delegate {
-                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-                ShelvesetComparer.Initialize(this);
-                return System.Threading.Tasks.Task.FromResult<object>(null) ;
-            });
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            ShelvesetComparer.Initialize(this);
             return;
+        }
+
+        /// <summary>
+        /// Async ToolWindow implementation: https://github.com/microsoft/VSSDK-Analyzers/blob/main/doc/VSSDK003.md
+        /// </summary>
+        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            if (toolWindowType == typeof(ShelvesetComparerToolWindow).GUID)
+            {
+                return this;
+            }
+
+            return base.GetAsyncToolWindowFactory(toolWindowType);
+        }
+
+        /// <summary>
+        /// Async ToolWindow implementation: https://github.com/microsoft/VSSDK-Analyzers/blob/main/doc/VSSDK003.md
+        /// </summary>
+        protected override string GetToolWindowTitle(Type toolWindowType, int id)
+        {
+            if (toolWindowType == typeof(ShelvesetComparerToolWindow))
+            {
+                return $"{Resources.ToolWindowTitle} loading ..";
+            }
+
+            return base.GetToolWindowTitle(toolWindowType, id);
         }
 
         #endregion

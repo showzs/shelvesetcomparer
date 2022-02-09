@@ -1,10 +1,12 @@
 ﻿// <copyright file="MainView.xaml.cs" company="https://github.com/rajeevboobna/CompareShelvesets">Copyright https://github.com/rajeevboobna/CompareShelvesets. All Rights Reserved. This code released under the terms of the Microsoft Public License (MS-PL, http://opensource.org/licenses/ms-pl.html.) This is sample code only, do not use in production environments.</copyright>
 
 
+using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -45,8 +47,7 @@ namespace DiffFinder
             {
                 if (string.IsNullOrWhiteSpace(visualStudioVersion))
                 {
-                    var dte = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE80.DTE2;
-                    visualStudioVersion = dte.SourceControl.Parent.Version;
+                    visualStudioVersion = GetVisualStudioVersionAsync().GetResultNoContext();
                 }
 
                 return visualStudioVersion;
@@ -70,6 +71,21 @@ namespace DiffFinder
         }
 
         /// <summary>
+        /// Get Visual Studio version (enforcing Main UI Thread if required)
+        /// </summary>
+        /// <returns></returns>
+        private static async Task<string> GetVisualStudioVersionAsync()
+        {
+            if (! ThreadHelper.CheckAccess())
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
+            var dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE80.DTE2;
+            return dte.SourceControl.Parent.Version;
+        }
+
+        /// <summary>
         /// The method opens up a window comparing two files
         /// </summary>
         /// <param name="compareFiles">The compare files view model</param>
@@ -77,20 +93,20 @@ namespace DiffFinder
         {
             string firstFileName = Path.GetTempFileName();
             string secondFileName = Path.GetTempFileName();
+            var extension = string.Empty;
             if (compareFiles.FirstFile != null)
             {
                 compareFiles.FirstFile.DownloadShelvedFile(firstFileName);
+                extension = Path.GetExtension(compareFiles.FirstFile.FileName);
             }
 
             if (compareFiles.SecondFile != null)
             {
                 compareFiles.SecondFile.DownloadShelvedFile(secondFileName);
+                extension = Path.GetExtension(compareFiles.SecondFile.FileName);
             }
 
-            string diffToolCommandArguments = string.Empty;
-            string diffToolCommand = string.Empty;
-
-            GetExternalTool(Path.GetExtension(compareFiles.FirstFile.FileName), out diffToolCommand, out diffToolCommandArguments);
+            GetExternalTool(extension, out var diffToolCommand, out var diffToolCommandArguments);
 
             if (string.IsNullOrWhiteSpace(diffToolCommand))
             {
@@ -146,12 +162,10 @@ namespace DiffFinder
         {
             if (e != null && e.ChangedButton == MouseButton.Left)
             {
-                var compareFiles = this.ComparisonFiles.SelectedItem as FileComparisonViewModel;
-
-                if (compareFiles != null)
+                if (this.ComparisonFiles.SelectedItem is FileComparisonViewModel compareFiles)
                 {
                     CompareFiles(compareFiles);
-                }            
+                }
             }
         }
 
@@ -164,11 +178,10 @@ namespace DiffFinder
         {
             if (e != null && e.Key == Key.Enter)
             {
-                var compareFiles = this.ComparisonFiles.SelectedItem as FileComparisonViewModel;
-                if (compareFiles != null)
+                if (this.ComparisonFiles.SelectedItem is FileComparisonViewModel compareFiles)
                 {
                     CompareFiles(compareFiles);
-                }            
+                }
             }
         }
 

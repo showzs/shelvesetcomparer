@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace DiffFinder
@@ -92,28 +93,43 @@ namespace DiffFinder
         /// </summary>
         /// <param name="sender">The sender object</param>
         /// <param name="e">The event arguments</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Exceptions handled in method")]
         public async override void Initialize(object sender, SectionInitializeEventArgs e)
         {
-            base.Initialize(sender, e);
-            var sectionContext = e.Context as ShelvesetsContext;
-            if (sectionContext != null)
+            try
             {
-                ShelvesetsContext context = sectionContext;
-                this.Shelvesets = context.Shelvesets;
+                base.Initialize(sender, e);
+                if (e.Context is ShelvesetsContext sectionContext)
+                {
+                    ShelvesetsContext context = sectionContext;
+                    this.Shelvesets = context.Shelvesets;
+                }
+                else
+                {
+                    await this.RefreshAsync();
+                }
             }
-            else
+            catch (Exception)
             {
-                await this.RefreshAsync();
+                ShowFailed();
             }
         }
 
         /// <summary>
         /// Refresh override.
         /// </summary>
-        public async override void Refresh()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Exceptions handled in method")]
+        public override async void Refresh()
         {
-            base.Refresh();
-            await this.RefreshAsync();
+            try
+            {
+                base.Refresh();
+                await this.RefreshAsync();
+            } 
+            catch (Exception)
+            {
+                ShowFailed();
+            }
         }
 
         /// <summary>
@@ -166,14 +182,22 @@ namespace DiffFinder
         /// </summary>
         /// <param name="sender">The sender object</param>
         /// <param name="e">The event arguments</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Exceptions handled in method")]
         protected override async void ContextChanged(object sender, ContextChangedEventArgs e)
         {
-            base.ContextChanged(sender, e);
-
-            // If the team project collection or team project changed, refresh the data for this section
-            if (e.TeamProjectCollectionChanged || e.TeamProjectChanged)
+            try
             {
-                await this.RefreshAsync();
+                base.ContextChanged(sender, e);
+
+                // If the team project collection or team project changed, refresh the data for this section
+                if (e.TeamProjectCollectionChanged || e.TeamProjectChanged)
+                {
+                    await this.RefreshAsync();
+                }
+            } 
+            catch (Exception)
+            {
+                ShowFailed();
             }
         }
 
@@ -211,8 +235,6 @@ namespace DiffFinder
 
             return shelveSets;
         }
-
-
 
         /// <summary>
         /// Retrieves the shelveset for pending change for the current user 
@@ -278,6 +300,11 @@ namespace DiffFinder
             {
                 this.IsBusy = false;
             }
+        }
+
+        private void ShowFailed([CallerMemberName] string caller = null)
+        {
+            this.ShowNotification($"Failed to {caller}", NotificationType.Error);
         }
 
 #if StubbingWithoutServer

@@ -51,8 +51,7 @@ namespace DiffFinder
                     false,
                     (o, e) =>
                     {
-                        ListView listView = o as ListView;
-                        if (listView != null)
+                        if (o is ListView listView)
                         {
                             if (GetCommand(listView) == null) // Don't change click handler if a command is set
                             {
@@ -83,8 +82,7 @@ namespace DiffFinder
                     null,
                     (o, e) =>
                     {
-                        ItemsControl listView = o as ItemsControl;
-                        if (listView != null)
+                        if (o is ItemsControl listView)
                         {
                             if (!GetAutoSort(listView)) // Don't change click handler if AutoSort enabled
                             {
