@@ -88,7 +88,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         /// <param name="compareFiles">The compare files view model</param>
         private static void CompareFiles(FileComparisonViewModel compareFiles)
-        {   
+        {
             string firstFileName = Path.GetTempFileName();
             string secondFileName = Path.GetTempFileName();
             var extension = string.Empty;

@@ -91,7 +91,6 @@ namespace WiredTechSolutions.ShelvesetComparer
             }
         }
 
-
         /// <summary>
         /// Overridden method that initializes the team explorer section
         /// </summary>
@@ -118,7 +117,6 @@ namespace WiredTechSolutions.ShelvesetComparer
                 ShowFailed();
             }
         }
-
 
         /// <summary>
         /// Refresh override.
@@ -182,7 +180,6 @@ namespace WiredTechSolutions.ShelvesetComparer
             ITeamExplorer teamExplorer = this.GetService<ITeamExplorer>();
             teamExplorer.NavigateToShelvesetDetails(shelveset);
         }
-
 
         /// <summary>
         /// the method is invoked when the context of the current team explorer window has changed.
