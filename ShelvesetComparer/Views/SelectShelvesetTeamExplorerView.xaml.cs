@@ -50,7 +50,6 @@ namespace WiredTechSolutions.ShelvesetComparer
             }
         }
 
-
         /// <summary>
         /// Event Handler for keying user name for the first shelveset.
         /// </summary>
@@ -78,7 +77,6 @@ namespace WiredTechSolutions.ShelvesetComparer
                 this.ShowFailed();
             }
         }
-
 
         /// <summary>
         /// Event Handler for keying user name for the second shelveset.
@@ -174,7 +172,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             {
                 this.ShowFailed();
             }
-}
+        }
 
         /// <summary>
         /// Event Handler for the compare button.

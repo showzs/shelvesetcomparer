@@ -4,7 +4,9 @@
         <Identity Id="d4c66e86-9fb7-4047-b964-2e216ae49a30" Version="1.0.3.22" Language="en-US" Publisher="Hamid Shahid" />
         <DisplayName>ShelvesetComparer</DisplayName>
         <Description xml:space="preserve">The extension allows you to compare files in two shelvesets.
-Version for VS2022</Description>
+Version for VS2022.
+based on https://github.com/hamidshahid/shelvesetcomparer .
+improved in https://github.com/dprZoft/shelvesetcomparer</Description>
         <MoreInfo>https://github.com/hamidshahid/shelvesetcomparer</MoreInfo>
         <License>Resources\License.rtf</License>
         <Icon>Resources\Package.ico</Icon>

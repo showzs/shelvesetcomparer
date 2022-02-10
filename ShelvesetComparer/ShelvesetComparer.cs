@@ -187,7 +187,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             }
 
             var paneGuid = new Guid(c_ExtensionOutputWindowGuid);
-            // get 
+            // get output window or create it
             var result = vsOutputWindow.GetPane(ref paneGuid, out var extensionOutputWindow);
             if (result != Microsoft.VisualStudio.VSConstants.S_OK || extensionOutputWindow == null)
             {
