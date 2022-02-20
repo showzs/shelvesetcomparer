@@ -177,8 +177,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <param name="shelveset">The shelveset to be displayed.</param>
         public void ViewShelvesetDetails(Shelveset shelveset)
         {
-            ITeamExplorer teamExplorer = this.GetService<ITeamExplorer>();
-            teamExplorer.NavigateToShelvesetDetails(shelveset);
+            TeamExplorer.NavigateToShelvesetDetails(shelveset);
         }
 
         /// <summary>

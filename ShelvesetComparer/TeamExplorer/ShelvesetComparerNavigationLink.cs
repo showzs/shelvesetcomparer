@@ -35,18 +35,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         public override void Execute()
         {
-            try
-            {
-                ITeamExplorer teamExplorer = GetService<ITeamExplorer>();
-                if (teamExplorer != null)
-                {
-                    teamExplorer.NavigateToPage(new Guid(ShelvesetComparerPage.PageId), null);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.ShowNotification(ex.Message, NotificationType.Error);
-            }
+            TeamExplorer.NavigateToShelvesetComparer();
         }
 
         /// <summary>
