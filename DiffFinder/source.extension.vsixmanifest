@@ -4,20 +4,16 @@
         <Identity Id="c3b55d75-8ea6-3936-a8853-1d105zd38z19" Version="1.0.3.22" Language="en-US" Publisher="Rajeev Boobna and dprZoft" />
         <DisplayName>DiffFinder</DisplayName>
         <Description xml:space="preserve">The extension allows you to compare files in two shelvesets.
-Version for VS2022.
+Version for VS2019.
 based on https://github.com/rajeevboobna/CompareShelvesets and https://github.com/hamidshahid/shelvesetcomparer .
 improved in https://github.com/dprZoft/shelvesetcomparer</Description>
         <MoreInfo>https://github.com/dprZoft/shelvesetcomparer</MoreInfo>
         <License>Resources\License.rtf</License>
         <ReleaseNotes>README.md</ReleaseNotes>
-        <Tags>Shelveset, Comparison, Team Explorer, VS2022, 2022</Tags>
+        <Tags>Shelveset, Comparison, Team Explorer, VS2019, 2019</Tags>
     </Metadata>
     <Installation>
-        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.IntegratedShell">
-            <ProductArchitecture>amd64</ProductArchitecture>
-        </InstallationTarget>
-        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.IntegratedShell">
-            <ProductArchitecture>x86</ProductArchitecture>
+        <InstallationTarget Version="[16.0,17.0)" Id="Microsoft.VisualStudio.IntegratedShell">
         </InstallationTarget>
     </Installation>
     <Dependencies>
@@ -28,6 +24,6 @@ improved in https://github.com/dprZoft/shelvesetcomparer</Description>
         <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
     </Assets>
     <Prerequisites>
-        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,17.0)" DisplayName="Visual Studio core editor" />
     </Prerequisites>
 </PackageManifest>

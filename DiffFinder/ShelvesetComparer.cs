@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.ComponentModel.Design;
-using System.Threading.Tasks;
 
 namespace DiffFinder
 {
@@ -187,7 +186,7 @@ namespace DiffFinder
         /// <summary>
         /// Write text with optional DateTime prefix to own output pane (create if not existing) and activate pane afterwards.
         /// </summary>
-        public static async Task OutputPaneWriteLineAsync(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
+        public static async System.Threading.Tasks.Task OutputPaneWriteLineAsync(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
         {
             if (! ThreadHelper.CheckAccess())
             {
