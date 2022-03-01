@@ -2,6 +2,7 @@
 
 
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Globalization;
@@ -89,68 +90,44 @@ namespace DiffFinder
         /// The method opens up a window comparing two files
         /// </summary>
         /// <param name="compareFiles">The compare files view model</param>
-        private static void CompareFiles(FileComparisonViewModel compareFiles)
+        private static async System.Threading.Tasks.Task CompareFilesAsync(FileComparisonViewModel compareFiles)
         {
-            string firstFileName = Path.GetTempFileName();
-            string secondFileName = Path.GetTempFileName();
-            var extension = string.Empty;
+            string firstFileName;
+            string secondFileName;
             if (compareFiles.FirstFile != null)
             {
+                var extension = Path.GetExtension(compareFiles.FirstFile.FileName);
+                firstFileName = string.Concat(Path.GetTempPath(), System.Guid.NewGuid().ToString(), extension);
                 compareFiles.FirstFile.DownloadShelvedFile(firstFileName);
-                extension = Path.GetExtension(compareFiles.FirstFile.FileName);
+            }
+            else
+            {
+                firstFileName = Path.GetTempFileName();
             }
 
             if (compareFiles.SecondFile != null)
             {
+                var extension = Path.GetExtension(compareFiles.SecondFile.FileName);
+                secondFileName = string.Concat(Path.GetTempPath(), System.Guid.NewGuid().ToString(), extension);
                 compareFiles.SecondFile.DownloadShelvedFile(secondFileName);
-                extension = Path.GetExtension(compareFiles.SecondFile.FileName);
-            }
-
-            GetExternalTool(extension, out var diffToolCommand, out var diffToolCommandArguments);
-
-            if (string.IsNullOrWhiteSpace(diffToolCommand))
-            {
-                var currentProcess = Process.GetCurrentProcess();
-                currentProcess.StartInfo.FileName = currentProcess.Modules[0].FileName;
-                currentProcess.StartInfo.Arguments = string.Format(CultureInfo.CurrentCulture, @"/diff ""{0}"" ""{1}""", firstFileName, secondFileName);
-                currentProcess.Start();
             }
             else
             {
-                // So there is a tool configured. Let's use it
-                diffToolCommandArguments = diffToolCommandArguments.Replace("%1", firstFileName).Replace("%2", secondFileName);
-                var startInfo = new ProcessStartInfo()
-                {
-                    Arguments = diffToolCommandArguments,
-                    FileName = diffToolCommand
-                };
-
-                Process.Start(startInfo);
+                secondFileName = Path.GetTempFileName();
             }
-        }
 
-        /// <summary>
-        /// Returns the file path of the external tool configured for comparison for the file with given extension.
-        /// </summary>
-        /// <param name="extension">The file extension.</param>
-        /// <param name="diffToolCommand">If a comparison tool is found this will contain the path of the tool</param>
-        /// <param name="diffToolCommandArguments">If a comparison tool is found this will contain command line arguments for the tool</param>
-        private static void GetExternalTool(string extension, out string diffToolCommand, out string diffToolCommandArguments)
-        {
-            diffToolCommand = string.Empty;
-            diffToolCommandArguments = string.Empty;
-
-            // read registry key for the extension
-            diffToolCommand = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\" + VisualStudioVersion + @"\TeamFoundation\SourceControl\DiffTools\" + extension + @"\Compare", "Command", null);
-            diffToolCommandArguments = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\" + VisualStudioVersion + @"\TeamFoundation\SourceControl\DiffTools\" + extension + @"\Compare", "Arguments", null);
-            if (diffToolCommand != null && diffToolCommandArguments != null)
+            if (!ThreadHelper.CheckAccess())
             {
-                return;
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             }
-
-            // read registry key for the wildcard
-            diffToolCommand = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\" + VisualStudioVersion + @"\TeamFoundation\SourceControl\DiffTools\.*\Compare", "Command", null);
-            diffToolCommandArguments = (string)Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\" + VisualStudioVersion + @"\TeamFoundation\SourceControl\DiffTools\.*\Compare", "Arguments", null);
+            var diffService = (IVsDifferenceService)Package.GetGlobalService(typeof(SVsDifferenceService));
+            var firstFileDisplayName = $"{compareFiles.FirstFileDisplayName};{compareFiles.FirstShelveName}";
+            var secondFileDisplayName = $"{compareFiles.SecondFileDisplayName};{compareFiles.SecondShelveName}";
+            var caption = $"{compareFiles.FirstFile?.FileName ?? string.Empty} vs {compareFiles.SecondFile?.FileName ?? string.Empty}";
+            var tooltip = $"{firstFileDisplayName}\r\n{secondFileDisplayName}";
+            _ = diffService.OpenComparisonWindow2(firstFileName, secondFileName, caption, tooltip, firstFileDisplayName, secondFileDisplayName, null, null, 0).Show();
+            File.Delete(firstFileName);
+            File.Delete(secondFileName);
         }
 
         /// <summary>
@@ -164,7 +141,7 @@ namespace DiffFinder
             {
                 if (this.ComparisonFiles.SelectedItem is FileComparisonViewModel compareFiles)
                 {
-                    CompareFiles(compareFiles);
+                    CompareFilesAsync(compareFiles).GetResultNoContext();
                 }
             }
         }
@@ -180,7 +157,7 @@ namespace DiffFinder
             {
                 if (this.ComparisonFiles.SelectedItem is FileComparisonViewModel compareFiles)
                 {
-                    CompareFiles(compareFiles);
+                    CompareFilesAsync(compareFiles).GetResultNoContext();
                 }
             }
         }
