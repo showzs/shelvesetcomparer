@@ -144,6 +144,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         {
             this.ErrorText.Text = error;
             this.ErrorPanel.Visibility = System.Windows.Visibility.Visible;
+            ShelvesetComparer.OutputPaneWriteLine(ParentSection.ServiceProvider, error);
         }
 
         /// <summary>
@@ -184,7 +185,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             try
             {
                 this.ClearError();
-                if (this.ListShelvesets.SelectedItems != null && this.ListShelvesets.SelectedItems.Count < 2)
+                if (this.ListShelvesets.SelectedItems != null && this.ListShelvesets.SelectedItems.Count != 2)
                 {
                     this.ShowError(WiredTechSolutions.ShelvesetComparer.Resources.ShelvesetNotSelectedErrorMessage);
                     return;
@@ -193,7 +194,17 @@ namespace WiredTechSolutions.ShelvesetComparer
                 var firstSheleveset = this.ListShelvesets.SelectedItems[0] as ShelvesetViewModel;
                 var secondSheleveset = this.ListShelvesets.SelectedItems[1] as ShelvesetViewModel;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
-                ShelvesetComparer.Instance.ShowComparisonToolWindow();
+
+                if (ShelvesetComparer.Instance != null)
+                {
+                    ShelvesetComparer.Instance.ShowComparisonToolWindow();
+                }
+                else
+                {
+                    // if the package has not yet been initialized, then we need to call it via DTE
+                    var dte2 = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
+                    dte2?.ExecuteCommand(ShelvesetComparer.ShelvesetComparerResuldIdDteCommandName);
+                }
             }
             catch (Exception ex)
             {

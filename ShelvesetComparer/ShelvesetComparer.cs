@@ -15,10 +15,24 @@ namespace WiredTechSolutions.ShelvesetComparer
     internal sealed class ShelvesetComparer
     {
         /// <summary>
-        /// Command ID.
+        /// Command ID for Result window
         /// </summary>
         public const int ShelvesetComparerResuldId = 0x0100;
+
+        /// <summary>
+        /// Command ID for TeamExplorer compare view
+        /// </summary>
         public const int ShelvesetComparerTeamExplorerViewId = 0x0200;
+
+        /// <summary>
+        /// Dte Command name for Result window, keep in sync with vsct Button names (removing special characters and whitespaces)
+        /// </summary>
+        public const string ShelvesetComparerResuldIdDteCommandName = "Team.ShelvesetComparerResults";
+
+        /// <summary>
+        /// Dte Command name for Result window, keep in sync with vsct Button names (removing special characters and whitespaces)
+        /// </summary>
+        public const string ShelvesetComparerTeamExplorerViewIdDteCommandName = "Team.ShelvesetComparerSelect";
 
         /// <summary>
         /// Command menu group (command set GUID).
@@ -38,7 +52,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         private ShelvesetComparer(AsyncPackage package)
         {
             this.package = package ?? throw new ArgumentNullException(nameof(package));
-            TraceOutput("Loading ..");
+            TraceOutput("Initializing Package ..");
 
             OleMenuCommandService commandService = this.ServiceProvider.GetService<IMenuCommandService, OleMenuCommandService>();
             if (commandService != null)
@@ -175,6 +189,14 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         public static async Task OutputPaneWriteLineAsync(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
         {
+#if DEBUG
+            Microsoft.Assumes.NotNull(serviceProvider);
+#endif
+            if (serviceProvider == null)
+            {
+                return;
+            }
+
             if (! ThreadHelper.CheckAccess())
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
