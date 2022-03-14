@@ -44,7 +44,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             {
                 if (teamExplorer != null)
                 {
-                    ShelvesetComparer.Instance.TraceOutput($"Open TeamExplorer ShelvesetComparer page.");
+                    ShelvesetComparer.Instance?.TraceOutput($"Open TeamExplorer ShelvesetComparer page.");
                     return teamExplorer.NavigateToPage(new Guid(ShelvesetComparerPage.PageId), null);
                 }
             }

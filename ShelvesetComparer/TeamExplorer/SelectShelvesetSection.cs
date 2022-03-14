@@ -272,7 +272,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         private static ObservableCollection<ShelvesetViewModel> FetchFakedShelveset()
         {
-            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake shelveset list for easier debugging.");
+            ShelvesetComparer.Instance?.TraceOutput("Debug mode active: using fake shelveset list for easier debugging.");
 
             var result = new ObservableCollection<ShelvesetViewModel>();
             for(var idx=0; idx < 1111; idx++)
