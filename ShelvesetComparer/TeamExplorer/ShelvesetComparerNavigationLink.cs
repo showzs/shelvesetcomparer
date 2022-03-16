@@ -35,8 +35,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         public override void Execute()
         {
-            ShelvesetComparer.EnsurePackageIsLoaded(base.ServiceProvider);
-            TeamExplorer.NavigateToShelvesetComparer();
+            ShelvesetComparer.ExecuteCommand_Select();
         }
 
         /// <summary>

@@ -195,16 +195,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                 var secondSheleveset = this.ListShelvesets.SelectedItems[1] as ShelvesetViewModel;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
 
-                if (ShelvesetComparer.Instance != null)
-                {
-                    ShelvesetComparer.Instance.ShowComparisonToolWindow();
-                }
-                else
-                {
-                    // if the package has not yet been initialized, then we need to call it via DTE
-                    var dte2 = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
-                    dte2?.ExecuteCommand(ShelvesetComparer.ShelvesetComparerResuldIdDteCommandName);
-                }
+                ShelvesetComparer.ExecuteCommand_Compare();
             }
             catch (Exception ex)
             {
