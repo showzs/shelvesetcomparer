@@ -27,12 +27,12 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// Dte Command name for Result window, keep in sync with vsct Button names (removing special characters and whitespaces)
         /// </summary>
-        public const string ShelvesetComparerResuldIdDteCommandName = "Team.ShelvesetComparerResults";
+        public const string ShelvesetComparerResuldIdDteCommandName = "Team.CompareShelvesetsResults";
 
         /// <summary>
         /// Dte Command name for Result window, keep in sync with vsct Button names (removing special characters and whitespaces)
         /// </summary>
-        public const string ShelvesetComparerTeamExplorerViewIdDteCommandName = "Team.ShelvesetComparerSelect";
+        public const string ShelvesetComparerTeamExplorerViewIdDteCommandName = "Team.CompareShelvesetsSelect";
 
         /// <summary>
         /// Command menu group (command set GUID).
@@ -89,9 +89,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             }
             else
             {
-                // if the package has not yet been initialized, then we need to call it via DTE
-                var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
-                dte2?.ExecuteCommand(ShelvesetComparer.ShelvesetComparerResuldIdDteCommandName);
+                ExecuteCommand(ShelvesetComparerResuldIdDteCommandName);
             }
         }
 
@@ -106,10 +104,26 @@ namespace WiredTechSolutions.ShelvesetComparer
             }
             else
             {
-                // if the package has not yet been initialized, then we need to call it via DTE
-                var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
-                dte2?.ExecuteCommand(ShelvesetComparerTeamExplorerViewIdDteCommandName);
+                ExecuteCommand(ShelvesetComparerTeamExplorerViewIdDteCommandName);
             }
+        }
+        private static void ExecuteCommand(string commandName)
+        {
+            if (!ThreadHelper.CheckAccess())
+            {
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    ExecuteCommand(commandName);
+                });
+            }
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // if the package has not yet been initialized, then we need to call it via DTE
+            var dte2 = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            Microsoft.Assumes.NotNull(dte2);
+            dte2.ExecuteCommand(commandName);
         }
 
         /// <summary>
