@@ -79,6 +79,17 @@ namespace WiredTechSolutions.ShelvesetComparer
         }
 
         /// <summary>
+        /// Check Instance and load Package if required
+        /// </summary>
+        internal static void EnsurePackageIsLoaded(IServiceProvider serviceProvider)
+        {
+            if (Instance == null)
+            {
+                ShelvesetComparerPackage.LoadPackage(serviceProvider);
+            }
+        }
+
+        /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
         private IServiceProvider ServiceProvider

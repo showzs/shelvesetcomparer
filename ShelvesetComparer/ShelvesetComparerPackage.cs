@@ -51,6 +51,45 @@ namespace WiredTechSolutions.ShelvesetComparer
             // initialization is the Initialize method.
         }
 
+        /// <summary>
+        /// Helper method to manually load the package if not yet loaded
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static IVsPackage LoadPackage(IServiceProvider serviceProvider)
+        {
+            Microsoft.Assumes.NotNull(serviceProvider);
+
+            if (! ThreadHelper.CheckAccess())
+            {
+                return ThreadHelper.JoinableTaskFactory.Run(async () =>
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    return LoadPackage(serviceProvider);
+                });
+            }
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // from visualstudio/visual-studio-2015/extensibility/loading-vspackages
+            var shell = serviceProvider.GetService<SVsShell, IVsShell>();
+            Microsoft.Assumes.NotNull(shell);
+
+            var packgaeGuide = new Guid(PackageGuidString);
+            if (shell.IsPackageLoaded(ref packgaeGuide, out var package) == Microsoft.VisualStudio.VSConstants.S_OK)
+            {
+                return package;
+            }
+
+            if (shell.LoadPackage(ref packgaeGuide, out package) == Microsoft.VisualStudio.VSConstants.S_OK)
+            {
+                return package;
+            }
+
+            throw new ArgumentException("Failed to load package!");
+        }
+
         #region Package Members
 
         /// <summary>
