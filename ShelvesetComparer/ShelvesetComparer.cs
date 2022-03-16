@@ -79,13 +79,36 @@ namespace WiredTechSolutions.ShelvesetComparer
         }
 
         /// <summary>
-        /// Check Instance and load Package if required
+        /// Static helper to ensure package is loaded and call Compare command
         /// </summary>
-        internal static void EnsurePackageIsLoaded(IServiceProvider serviceProvider)
+        public static void ExecuteCommand_Compare()
         {
-            if (Instance == null)
+            if (Instance != null)
             {
-                ShelvesetComparerPackage.LoadPackage(serviceProvider);
+                Instance.ShowComparisonToolWindow();
+            }
+            else
+            {
+                // if the package has not yet been initialized, then we need to call it via DTE
+                var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
+                dte2?.ExecuteCommand(ShelvesetComparer.ShelvesetComparerResuldIdDteCommandName);
+            }
+        }
+
+        /// <summary>
+        /// Static helper to ensure package is loaded and call Select command
+        /// </summary>
+        public static void ExecuteCommand_Select()
+        {
+            if (Instance != null)
+            {
+                Instance.NavigateToShelvestComparerPage();
+            }
+            else
+            {
+                // if the package has not yet been initialized, then we need to call it via DTE
+                var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
+                dte2?.ExecuteCommand(ShelvesetComparerTeamExplorerViewIdDteCommandName);
             }
         }
 
