@@ -6,7 +6,7 @@ namespace WiredTechSolutions.ShelvesetComparer
     /// <summary>
     /// The class creates the team explorer page for Shelveset Comparer extension.
     /// </summary>
-    [TeamExplorerPage(ShelvesetComparerPage.PageId)]
+    [TeamExplorerPage(ShelvesetComparerPage.PageId, Undockable = true)]
     public class ShelvesetComparerPage : TeamExplorerBasePage
     {
         /// <summary>
