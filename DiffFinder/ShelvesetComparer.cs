@@ -189,6 +189,14 @@ namespace DiffFinder
         /// </summary>
         public static async Task OutputPaneWriteLineAsync(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
         {
+#if DEBUG
+            Microsoft.Assumes.NotNull(serviceProvider);
+#endif
+            if (serviceProvider == null)
+            {
+                return;
+            }
+
             if (! ThreadHelper.CheckAccess())
             {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -207,14 +215,16 @@ namespace DiffFinder
             {
                 // the pane doesn't already exist
                 result = vsOutputWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
+                Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(result);
                 if (result == Microsoft.VisualStudio.VSConstants.S_OK)
                 {
                     result = vsOutputWindow.GetPane(ref paneGuid, out extensionOutputWindow);
+                    Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(result);
                 }
             }
             if (result == Microsoft.VisualStudio.VSConstants.S_OK)
             {
-                result = extensionOutputWindow.Activate();
+                extensionOutputWindow.Activate();
             }
 
             if (prefixDateTime)
@@ -222,10 +232,7 @@ namespace DiffFinder
                 text = $"{DateTime.Now:G} {text}";
             }
             result = extensionOutputWindow.OutputStringThreadSafe(text + Environment.NewLine);
-            //if (result != Microsoft.VisualStudio.VSConstants.S_OK)
-            //{
-            //    // TODO
-            //}
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(result);
         }
 
         // randomly generated GUID to identify the "Shelveset Comparer" output window pane
