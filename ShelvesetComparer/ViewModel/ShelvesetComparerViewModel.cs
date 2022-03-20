@@ -406,7 +406,8 @@ namespace WiredTechSolutions.ShelvesetComparer
 #if ! StubbingWithoutServer
             return vcs.QueryShelvedChanges(shelveset.Shelveset)[0]
                 ?.PendingChanges
-                ?.Select(pc => new PendingChangeFacade(pc))?.ToArray<IPendingChange>();
+                ?.Select(pc => new PendingChangeFacade(pc))
+                ?.ToArray<IPendingChange>();
 
 #else
             ShelvesetComparer.Instance?.TraceOutput("Debug mode active: using fake pending changes for easier debugging (file lists for Shelveset1, Shelveset2, Shelveset3).");
@@ -476,7 +477,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         private IPendingChange FindMatchingChangeWithBestMatchingRelativePath(IPendingChange firstPendingChange, IPendingChange[] secondShelvesetChanges)
         {
             IPendingChange bestMatchingItem = null;
-            var firstPendingChangeItemPath = firstPendingChange.LocalOrServerItem;
+            var firstPendingChangeItemPath = firstPendingChange?.LocalOrServerItem;
             if (firstPendingChangeItemPath == null)
             {
                 return null;
