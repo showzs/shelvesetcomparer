@@ -79,6 +79,54 @@ namespace DiffFinder
         }
 
         /// <summary>
+        /// Static helper to ensure package is loaded and call Compare command
+        /// </summary>
+        public static void ExecuteCommand_Compare()
+        {
+            if (Instance != null)
+            {
+                Instance.ShowComparisonToolWindow();
+            }
+            else
+            {
+                ExecuteCommand(ShelvesetComparerResuldIdDteCommandName);
+            }
+        }
+
+        /// <summary>
+        /// Static helper to ensure package is loaded and call Select command
+        /// </summary>
+        public static void ExecuteCommand_Select()
+        {
+            if (Instance != null)
+            {
+                Instance.NavigateToShelvestComparerPage();
+            }
+            else
+            {
+                ExecuteCommand(ShelvesetComparerTeamExplorerViewIdDteCommandName);
+            }
+        }
+        private static void ExecuteCommand(string commandName)
+        {
+            if (!ThreadHelper.CheckAccess())
+            {
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    ExecuteCommand(commandName);
+                });
+            }
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // if the package has not yet been initialized, then we need to call it via DTE
+            var dte2 = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            Microsoft.Assumes.NotNull(dte2);
+            dte2.ExecuteCommand(commandName);
+        }
+
+        /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
         private IServiceProvider ServiceProvider
@@ -164,7 +212,7 @@ namespace DiffFinder
         public void TraceOutput(string text)
         {
 #if TRACE
-            OutputPaneWriteLine(text);
+            OutputPaneWriteLine($"TRACE: {text}");
 #endif
         }
 
@@ -205,37 +253,41 @@ namespace DiffFinder
             var vsOutputWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
             if (vsOutputWindow == null)
             {
+                Debug.WriteLine("Failed to get output window.");
                 return;
             }
 
-            var paneGuid = new Guid(c_ExtensionOutputWindowGuid);
+            var paneGuid = Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
             // get output window or create it
-            var result = vsOutputWindow.GetPane(ref paneGuid, out var extensionOutputWindow);
-            if (result != Microsoft.VisualStudio.VSConstants.S_OK || extensionOutputWindow == null)
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.GetPane(ref paneGuid, out var extensionOutputWindow))
+                || extensionOutputWindow == null)
             {
+                const string paneTitle = "General";
                 // the pane doesn't already exist
-                result = vsOutputWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
-                Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(result);
-                if (result == Microsoft.VisualStudio.VSConstants.S_OK)
+                if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.CreatePane(ref paneGuid, paneTitle, Convert.ToInt32(true), Convert.ToInt32(true))))
                 {
-                    result = vsOutputWindow.GetPane(ref paneGuid, out extensionOutputWindow);
-                    Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(result);
+                    Debug.WriteLine("Failed to create output pane.");
+                    return;
+                }
+                if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.GetPane(ref paneGuid, out extensionOutputWindow))
+                    || extensionOutputWindow == null)
+                {
+                    Debug.WriteLine("Failed to get output pane after create.");
                 }
             }
-            if (result == Microsoft.VisualStudio.VSConstants.S_OK)
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(extensionOutputWindow.Activate()))
             {
-                extensionOutputWindow.Activate();
+                Debug.WriteLine("Failed to activate output pane.");
             }
 
             if (prefixDateTime)
             {
                 text = $"{DateTime.Now:G} {text}";
             }
-            result = extensionOutputWindow.OutputStringThreadSafe(text + Environment.NewLine);
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(result);
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(extensionOutputWindow.OutputStringThreadSafe(text + Environment.NewLine)))
+            {
+                Debug.WriteLine("Failed to write to output pane.");
+            }
         }
-
-        // randomly generated GUID to identify the "Shelveset Comparer" output window pane
-        private const string c_ExtensionOutputWindowGuid = "{38BFBA25-8AB3-4F8E-B992-930E403AA281}";
     }
 }

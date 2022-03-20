@@ -50,7 +50,7 @@ namespace DiffFinder
                     var pendingChangesExt = teamExplorer.CurrentPageOrUndockedGetExtensibilityService<IPendingChangesExt>();
                     var ws = pendingChangesExt?.Workspace;
 
-                    ShelvesetComparer.Instance.TraceOutput($"Open TeamExplorer ShelvesetComparer page with WS: {ws?.DisplayName ?? "<null>"}");
+                    ShelvesetComparer.Instance?.OutputPaneWriteLine($"Open TeamExplorer ShelvesetComparer page with WS: {ws?.DisplayName ?? "<null>"}");
                     return teamExplorer.NavigateToPage(new Guid(ShelvesetComparerPage.PageId), ws);
                 }
             }
