@@ -76,7 +76,13 @@ namespace DiffFinder
         public Stream DownloadBaseFile() { return null; }
         public void DownloadBaseFile(string localFileName) { }
         public Stream DownloadShelvedFile() { return null; }
-        public void DownloadShelvedFile(string localFileName) { }
+        public void DownloadShelvedFile(string localFileName) 
+        {
+            if (!File.Exists(localFileName))
+            {
+                File.WriteAllBytes(localFileName, System.Array.Empty<byte>());
+            }
+        }
 
     }
 }
