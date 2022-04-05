@@ -38,11 +38,7 @@ namespace DiffFinder
         /// </summary>
         public override void Execute()
         {
-            if (ShelvesetComparer.Instance == null)
-            {
-                var service = Package.GetGlobalService(typeof(ShelvesetComparer)); // hack for load package from teamexplorer item
-            }
-            TeamExplorer.NavigateToShelvesetComparer();
+            ShelvesetComparer.ExecuteCommand_Select();
         }
 
         /// <summary>

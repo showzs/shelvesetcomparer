@@ -45,7 +45,7 @@
       <Setter Property="FrameworkElement.Margin" Value="0" />
   </Style>
 
-    <!-- ListViewItem Style -->
+  <!-- ListViewItem Style -->
   <Style TargetType="{x:Type ListViewItem}">
     <Setter Property="Control.Background" Value="{StaticResource ItemBrushKey}" />
     <Setter Property="Control.Foreground" Value="{StaticResource ItemTextBrushKey}" />
