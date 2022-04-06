@@ -4,11 +4,10 @@ namespace WiredTechSolutions.ShelvesetComparer
     using System;
     using System.ComponentModel.Design;
     using System.Diagnostics;
-    using System.Globalization;
-    using System.Threading.Tasks;
     using Microsoft.TeamFoundation.Controls;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
+    using Task = System.Threading.Tasks.Task;
 
     /// <summary>
     /// Command handler
@@ -86,7 +85,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         {
             if (Instance != null)
             {
-                Instance.ShowComparisonToolWindow();
+                Instance.ShowComparisonWindowAsync().GetResultNoContext();
             }
             else
             {
