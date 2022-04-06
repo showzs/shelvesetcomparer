@@ -55,18 +55,26 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         /// <param name="sender">The first shelveset user text box</param>
         /// <param name="e">The event arguments</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Eventhandler + Exceptions handled")]
         private async void FirstShelvesetUserTextBox_KeyUp(object sender, KeyEventArgs e)
         {
-            this.ClearError();
-            if (e.Key == Key.Enter)
+            try
             {
-                if (!string.IsNullOrWhiteSpace(this.FirstShelvesetUserTextBox.Text) && this.UserIdentityExists(this.FirstShelvesetUserTextBox.Text) == false)
+                this.ClearError();
+                if (e.Key == Key.Enter)
                 {
-                    this.ShowError("User Account Name or display name could not be found");
-                    return;
-                }
+                    if (!string.IsNullOrWhiteSpace(this.FirstShelvesetUserTextBox.Text) && this.UserIdentityExists(this.FirstShelvesetUserTextBox.Text) == false)
+                    {
+                        this.ShowError("User Account Name or display name could not be found");
+                        return;
+                    }
 
-                await this.ParentSection.RefreshAsync();
+                    await this.ParentSection.RefreshAsync();
+                }
+            }
+            catch (Exception)
+            {
+                this.ShowFailed();
             }
         }
 
@@ -75,18 +83,26 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         /// <param name="sender">The second shelveset user text box</param>
         /// <param name="e">The event arguments</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Eventhandler + Exceptions handled")]
         private async void SecondShelvesetUserTextBox_KeyUp(object sender, KeyEventArgs e)
         {
-            this.ClearError();
-            if (e.Key == Key.Enter)
+            try
             {
-                if (!string.IsNullOrWhiteSpace(this.SecondShelvesetUserTextBox.Text) && this.UserIdentityExists(this.SecondShelvesetUserTextBox.Text) == false)
+                this.ClearError();
+                if (e.Key == Key.Enter)
                 {
-                    this.ShowError("User Account Name or display name could not be found");
-                    return;
-                }
+                    if (!string.IsNullOrWhiteSpace(this.SecondShelvesetUserTextBox.Text) && this.UserIdentityExists(this.SecondShelvesetUserTextBox.Text) == false)
+                    {
+                        this.ShowError("User Account Name or display name could not be found");
+                        return;
+                    }
 
-                await this.ParentSection.RefreshAsync();
+                    await this.ParentSection.RefreshAsync();
+                }
+            }
+            catch (Exception)
+            {
+                this.ShowFailed();
             }
         }
 
@@ -115,6 +131,11 @@ namespace WiredTechSolutions.ShelvesetComparer
             return true;
         }
 
+        private void ShowFailed([System.Runtime.CompilerServices.CallerMemberName] string caller = null)
+        {
+            ShowError($"Failed to {caller}");
+        }
+
         /// <summary>
         /// Displays the error panel
         /// </summary>
@@ -123,6 +144,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         {
             this.ErrorText.Text = error;
             this.ErrorPanel.Visibility = System.Windows.Visibility.Visible;
+            ShelvesetComparer.OutputPaneWriteLine(ParentSection.ServiceProvider, error);
         }
 
         /// <summary>
@@ -139,10 +161,18 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         /// <param name="sender">The list button</param>
         /// <param name="e">Event parameters</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Eventhandler + Exceptions handled")]
         private async void ListButton_Click(object sender, RoutedEventArgs e)
         {
-            this.ClearError();
-            await this.ParentSection.RefreshAsync();
+            try
+            {
+                this.ClearError();
+                await this.ParentSection.RefreshAsync();
+            }
+            catch (Exception)
+            {
+                this.ShowFailed();
+            }
         }
 
         /// <summary>
@@ -155,7 +185,7 @@ namespace WiredTechSolutions.ShelvesetComparer
             try
             {
                 this.ClearError();
-                if (this.ListShelvesets.SelectedItems != null && this.ListShelvesets.SelectedItems.Count < 2)
+                if (this.ListShelvesets.SelectedItems != null && this.ListShelvesets.SelectedItems.Count != 2)
                 {
                     this.ShowError(WiredTechSolutions.ShelvesetComparer.Resources.ShelvesetNotSelectedErrorMessage);
                     return;
@@ -164,7 +194,8 @@ namespace WiredTechSolutions.ShelvesetComparer
                 var firstSheleveset = this.ListShelvesets.SelectedItems[0] as ShelvesetViewModel;
                 var secondSheleveset = this.ListShelvesets.SelectedItems[1] as ShelvesetViewModel;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
-                ShelvesetComparer.Instance.ShowComparisonWindow();
+
+                ShelvesetComparer.ExecuteCommand_Compare();
             }
             catch (Exception ex)
             {

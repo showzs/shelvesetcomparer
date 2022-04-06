@@ -49,9 +49,11 @@ namespace WiredTechSolutions.ShelvesetComparer
             get
             {
                 ITeamFoundationContextManager tfcontextManager = this.GetService<ITeamFoundationContextManager>();
-                return tfcontextManager != null ? tfcontextManager.CurrentContext : null;
+                return tfcontextManager?.CurrentContext;
             }
         }
+
+        public ITeamExplorer TeamExplorer => GetService<ITeamExplorer>();
 
         public T GetService<T>()
         {
@@ -60,7 +62,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                 return (T)this.ServiceProvider.GetService(typeof(T));
             }
 
-            return default(T);
+            return default;
         }
 
         public void Dispose()
@@ -80,21 +82,14 @@ namespace WiredTechSolutions.ShelvesetComparer
         protected Guid ShowNotification(string message, NotificationType type)
         {
             ITeamExplorer teamExplorer = this.GetService<ITeamExplorer>();
-            if (teamExplorer != null)
-            {
-                Guid guid = Guid.NewGuid();
-                teamExplorer.ShowNotification(message, type, NotificationFlags.None, null, guid);
-                return guid;
-            }
-
-            return Guid.Empty;
+            return teamExplorer.ShowNotification(message, type);
         }
 
         protected void RaisePropertyChanged(string propertyName)
         {
             if (this.PropertyChanged != null)
             {
-                this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
 

@@ -50,8 +50,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                     false,
                     (o, e) =>
                     {
-                        ListView listView = o as ListView;
-                        if (listView != null)
+                        if (o is ListView listView)
                         {
                             if (GetCommand(listView) == null) // Don't change click handler if a command is set
                             {
@@ -82,8 +81,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                     null,
                     (o, e) =>
                     {
-                        ItemsControl listView = o as ItemsControl;
-                        if (listView != null)
+                        if (o is ItemsControl listView)
                         {
                             if (!GetAutoSort(listView)) // Don't change click handler if AutoSort enabled
                             {
@@ -247,8 +245,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <param name="e">The event argument</param>
         private static void ColumnHeader_Click(object sender, RoutedEventArgs e)
         {
-            GridViewColumnHeader headerClicked = e.OriginalSource as GridViewColumnHeader;
-            if (headerClicked != null && headerClicked.Column != null)
+            if (e.OriginalSource is GridViewColumnHeader headerClicked && headerClicked.Column != null)
             {
                 string propertyName = GetPropertyName(headerClicked.Column);
                 if (!string.IsNullOrEmpty(propertyName))

@@ -3,7 +3,9 @@ namespace WiredTechSolutions.ShelvesetComparer
 {
     using System;
     using System.ComponentModel.Design;
+    using System.Diagnostics;
     using System.Globalization;
+    using System.Threading.Tasks;
     using Microsoft.TeamFoundation.Controls;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
@@ -14,10 +16,24 @@ namespace WiredTechSolutions.ShelvesetComparer
     internal sealed class ShelvesetComparer
     {
         /// <summary>
-        /// Command ID.
+        /// Command ID for Result window
         /// </summary>
         public const int ShelvesetComparerResuldId = 0x0100;
+
+        /// <summary>
+        /// Command ID for TeamExplorer compare view
+        /// </summary>
         public const int ShelvesetComparerTeamExplorerViewId = 0x0200;
+
+        /// <summary>
+        /// Dte Command name for Result window, keep in sync with vsct Button names (removing special characters and whitespaces)
+        /// </summary>
+        public const string ShelvesetComparerResuldIdDteCommandName = "Team.CompareShelvesetsResults";
+
+        /// <summary>
+        /// Dte Command name for Result window, keep in sync with vsct Button names (removing special characters and whitespaces)
+        /// </summary>
+        public const string ShelvesetComparerTeamExplorerViewIdDteCommandName = "Team.CompareShelvesetsSelect";
 
         /// <summary>
         /// Command menu group (command set GUID).
@@ -27,24 +43,17 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
-        private readonly Package package;
+        private readonly AsyncPackage package;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ShelvesetComparer"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private ShelvesetComparer(Package package)
+        private ShelvesetComparer(AsyncPackage package)
         {
-            if (package == null)
-            {
-                throw new ArgumentNullException(nameof(package));
-            }
-
-            this.package = package;
-#if DEBUG
-            this.OutputPaneWriteLine("Loading ..");
-#endif
+            this.package = package ?? throw new ArgumentNullException(nameof(package));
+            TraceOutput("Initializing Package ..");
 
             OleMenuCommandService commandService = this.ServiceProvider.GetService<IMenuCommandService, OleMenuCommandService>();
             if (commandService != null)
@@ -71,6 +80,54 @@ namespace WiredTechSolutions.ShelvesetComparer
         }
 
         /// <summary>
+        /// Static helper to ensure package is loaded and call Compare command
+        /// </summary>
+        public static void ExecuteCommand_Compare()
+        {
+            if (Instance != null)
+            {
+                Instance.ShowComparisonToolWindow();
+            }
+            else
+            {
+                ExecuteCommand(ShelvesetComparerResuldIdDteCommandName);
+            }
+        }
+
+        /// <summary>
+        /// Static helper to ensure package is loaded and call Select command
+        /// </summary>
+        public static void ExecuteCommand_Select()
+        {
+            if (Instance != null)
+            {
+                Instance.NavigateToShelvestComparerPage();
+            }
+            else
+            {
+                ExecuteCommand(ShelvesetComparerTeamExplorerViewIdDteCommandName);
+            }
+        }
+        private static void ExecuteCommand(string commandName)
+        {
+            if (!ThreadHelper.CheckAccess())
+            {
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    ExecuteCommand(commandName);
+                });
+            }
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // if the package has not yet been initialized, then we need to call it via DTE
+            var dte2 = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            Microsoft.Assumes.NotNull(dte2);
+            dte2.ExecuteCommand(commandName);
+        }
+
+        /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
         private IServiceProvider ServiceProvider
@@ -85,7 +142,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// Initializes the singleton instance of the command.
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
+        public static void Initialize(AsyncPackage package)
         {
             Instance = new ShelvesetComparer(package);
         }
@@ -93,16 +150,24 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// Open and show ShelvesetComparer result window.
         /// </summary>
-        public void ShowComparisonWindow()
+        public void ShowComparisonToolWindow()
         {
-            ToolWindowPane window = package.FindToolWindow(typeof(ShelvesetComparerToolWindow), 0, true);
-            if ((null == window) || (null == window.Frame))
-            {
-                throw new NotSupportedException(Resources.CanNotCreateWindow);
-            }
+            // Async ToolWindow implementation: https://github.com/microsoft/VSSDK-Analyzers/blob/main/doc/VSSDK003.md
+            // Get the instance number 0 of this tool window. This window is single instance so this instance
+            // is actually the only one.
+            // The last flag is set to true so that if the tool window does not exists it will be created.
+            _ = this.package.JoinableTaskFactory.RunAsync(async delegate
+              {
+                  ToolWindowPane window = await this.package.ShowToolWindowAsync(typeof(ShelvesetComparerToolWindow), 0, true, this.package.DisposalToken);
+                  if ((null == window) || (null == window.Frame))
+                  {
+                      throw new NotSupportedException(Resources.CanNotCreateWindow);
+                  }
 
-            IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-            windowFrame.Show();
+                  await this.package.JoinableTaskFactory.SwitchToMainThreadAsync();
+                  IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
+                  Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
+              });
         }
 
         /// <summary>
@@ -116,7 +181,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <param name="e">Event args.</param>
         private void ShelvesetComparerResuldIdMenuItemCallback(object sender, EventArgs e)
         {
-            this.ShowComparisonWindow();
+            this.ShowComparisonToolWindow();
         }
 
         /// <summary>
@@ -148,7 +213,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         public void TraceOutput(string text)
         {
 #if TRACE
-            OutputPaneWriteLine(text);
+            OutputPaneWriteLine($"TRACE: {text}");
 #endif
         }
 
@@ -165,30 +230,65 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// </summary>
         public static void OutputPaneWriteLine(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
         {
-            var outWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
-            if (outWindow == null)
+            OutputPaneWriteLineAsync(serviceProvider, text, prefixDateTime).GetResultNoContext();
+        }
+
+        /// <summary>
+        /// Write text with optional DateTime prefix to own output pane (create if not existing) and activate pane afterwards.
+        /// </summary>
+        public static async Task OutputPaneWriteLineAsync(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
+        {
+#if DEBUG
+            Microsoft.Assumes.NotNull(serviceProvider);
+#endif
+            if (serviceProvider == null)
             {
                 return;
             }
 
-            // randomly generated GUID to identify the "Shelveset Comparer" output window pane
-            const string c_ExtensionOutputWindowGuid = "{38BFBA25-8AB3-4F8E-B992-930E403AA281}";
-            Guid paneGuid = new Guid(c_ExtensionOutputWindowGuid);
-            IVsOutputWindowPane generalPane = null;
-            outWindow.GetPane(ref paneGuid, out generalPane);
-            if (generalPane == null)
+            if (! ThreadHelper.CheckAccess())
             {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
+            var vsOutputWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
+            if (vsOutputWindow == null)
+            {
+                Debug.WriteLine("Failed to get output window.");
+                return;
+            }
+
+            var paneGuid = Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
+            // get output window or create it
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.GetPane(ref paneGuid, out var extensionOutputWindow))
+                || extensionOutputWindow == null)
+            {
+                const string paneTitle = "General";
                 // the pane doesn't already exist
-                outWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
-                outWindow.GetPane(ref paneGuid, out generalPane);
+                if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.CreatePane(ref paneGuid, paneTitle, Convert.ToInt32(true), Convert.ToInt32(true))))
+                {
+                    Debug.WriteLine("Failed to create output pane.");
+                    return;
+                }
+                if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.GetPane(ref paneGuid, out extensionOutputWindow))
+                    || extensionOutputWindow == null)
+                {
+                    Debug.WriteLine("Failed to get output pane after create.");
+                }
+            }
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(extensionOutputWindow.Activate()))
+            {
+                Debug.WriteLine("Failed to activate output pane.");
             }
 
             if (prefixDateTime)
             {
                 text = $"{DateTime.Now:G} {text}";
             }
-            generalPane.OutputString(text + Environment.NewLine);
-            generalPane.Activate();
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(extensionOutputWindow.OutputStringThreadSafe(text + Environment.NewLine)))
+            {
+                Debug.WriteLine("Failed to write to output pane.");
+            }
         }
     }
 }

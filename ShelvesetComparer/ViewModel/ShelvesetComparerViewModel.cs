@@ -67,7 +67,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// The service provider
         /// </summary>
-        private IServiceProvider serviceProvider;
+        private readonly IServiceProvider serviceProvider;
 
         /// <summary>
         /// First Shelveset Name
@@ -82,7 +82,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <summary>
         /// The collection of files
         /// </summary>
-        private ObservableCollection<FileComparisonViewModel> files;
+        private readonly ObservableCollection<FileComparisonViewModel> files;
 
         /// <summary>
         /// The filter of files
@@ -120,13 +120,23 @@ namespace WiredTechSolutions.ShelvesetComparer
             {
                 if (instance == null)
                 {
-                    var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
-                    var serviceProvider = new ServiceProvider(dte2.DTE as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-                    instance = new ShelvesetComparerViewModel(serviceProvider);
+                    CreateInstanceAsync().GetResultNoContext();
                 }
 
                 return instance;
             }
+        }
+
+        private static async System.Threading.Tasks.Task CreateInstanceAsync()
+        {
+            if (! ThreadHelper.CheckAccess())
+            {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
+            var dte2 = Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
+            var serviceProvider = new ServiceProvider(dte2.DTE as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
+            instance = new ShelvesetComparerViewModel(serviceProvider);
         }
 
         /// <summary>
@@ -288,13 +298,19 @@ namespace WiredTechSolutions.ShelvesetComparer
                 throw new ArgumentNullException("secondShelveset");
             }
 
-            var tfcontextManager = this.GetService<ITeamFoundationContextManager>();
             VersionControlServer vcs = null;
 #if ! StubbingWithoutServer
+            var tfcontextManager = this.GetService<ITeamFoundationContextManager>();
+            if (tfcontextManager == null)
+            {
+                this.SummaryText = Resources.ConnectionErrorMessage + " (no ITeamFoundationContextManager)";
+                return;
+            }
+
             vcs = tfcontextManager.CurrentContext?.TeamProjectCollection?.GetService<VersionControlServer>();
             if (vcs == null)
             {
-                this.SummaryText = Resources.ConnectionErrorMessage;
+                this.SummaryText = Resources.ConnectionErrorMessage + " (no VersionControlServer)";
                 return;
             }
 #endif
@@ -304,16 +320,26 @@ namespace WiredTechSolutions.ShelvesetComparer
 
             this.files.Clear();
             var firstShelvesetChanges = GetPendingChanges(firstShelveset, vcs);
+            if (firstShelvesetChanges == null)
+            {
+                this.SummaryText = "Failed to get pending changes for first shelveset: " + FirstShelvesetName;
+                return;
+            }
             var secondShelvesetChanges = GetPendingChanges(secondShelveset, vcs);
+            if (secondShelvesetChanges == null)
+            {
+                this.SummaryText = "Failed to get pending changes for second shelveset: " + SecondShelvesetName;
+                return;
+            }
+
             var orderedCollection = new SortedList<string, FileComparisonViewModel>();
-            
             int sameContentFileCount = 0;
             int commonFilesCount = 0;
             foreach (var pendingChange in firstShelvesetChanges)
             {
                 var matchingFile = FindMatchingChangeInOtherPendingChanges(pendingChange, secondShelvesetChanges);
 
-                bool sameContent = matchingFile != null ? AreFilesInPendingChangesSame(pendingChange, matchingFile) : false;
+                bool sameContent = matchingFile != null && AreFilesInPendingChangesSame(pendingChange, matchingFile);
                 FileComparisonViewModel comparisonItem = new FileComparisonViewModel()
                 {
                     FirstFile  = pendingChange,
@@ -324,18 +350,18 @@ namespace WiredTechSolutions.ShelvesetComparer
                 orderedCollection.Add(pendingChange.LocalOrServerFolder + "/" + pendingChange.FileName, comparisonItem);
                 if (sameContent)
                 {
-                    sameContentFileCount++;
+                    ++sameContentFileCount;
                 }
 
                 if (matchingFile != null) 
                 {
-                    commonFilesCount++;
+                    ++commonFilesCount;
                 }
             }
 
             foreach (var pendingChange in secondShelvesetChanges)
             {
-                if (!orderedCollection.ContainsKey(pendingChange.LocalOrServerFolder + "/" + pendingChange.FileName))
+                if (! orderedCollection.ContainsKey(pendingChange.LocalOrServerFolder + "/" + pendingChange.FileName))
                 {
                     var isThereAreNamedFile = FindItemWithSameItemId(orderedCollection, pendingChange.ItemId);
                     if (isThereAreNamedFile == null)
@@ -378,11 +404,13 @@ namespace WiredTechSolutions.ShelvesetComparer
         private IPendingChange[] GetPendingChanges(ShelvesetViewModel shelveset, VersionControlServer vcs)
         {
 #if ! StubbingWithoutServer
-            return vcs.QueryShelvedChanges(shelveset.Shelveset)[0].PendingChanges
-                .Select(pc => new PendingChangeFacade(pc)).ToArray<IPendingChange>();
+            return vcs.QueryShelvedChanges(shelveset.Shelveset)[0]
+                ?.PendingChanges
+                ?.Select(pc => new PendingChangeFacade(pc))
+                ?.ToArray<IPendingChange>();
 
 #else
-            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake pending changes for easier debugging.");
+            ShelvesetComparer.Instance?.TraceOutput("Debug mode active: using fake pending changes for easier debugging (file lists for Shelveset1, Shelveset2, Shelveset3).");
             if (shelveset.Name.Equals("Shelveset1"))
             {
                 return new List<IPendingChange>() 
@@ -431,11 +459,12 @@ namespace WiredTechSolutions.ShelvesetComparer
             var matchingFile = secondShelvesetChanges.FirstOrDefault(s => s.ItemId == firstPendingChange.ItemId);
             if (matchingFile == null)
             {
+                // not matched by ItemId, try LocalOrServerItem
                 matchingFile = secondShelvesetChanges.FirstOrDefault(s => s.LocalOrServerItem == firstPendingChange.LocalOrServerItem);
             }
             if (matchingFile == null)
             {
-                // try to find a best matching file by relative path.
+                // still not matched, try to find a best matching file by relative path.
                 matchingFile = FindMatchingChangeWithBestMatchingRelativePath(firstPendingChange, secondShelvesetChanges);
             }
 
@@ -448,8 +477,14 @@ namespace WiredTechSolutions.ShelvesetComparer
         private IPendingChange FindMatchingChangeWithBestMatchingRelativePath(IPendingChange firstPendingChange, IPendingChange[] secondShelvesetChanges)
         {
             IPendingChange bestMatchingItem = null;
-            var remainingPath = Path.GetDirectoryName(firstPendingChange.LocalOrServerItem).Replace('\\', '/');
-            var relativeItemPath = firstPendingChange.LocalOrServerItem.Replace(remainingPath + "/", string.Empty);
+            var firstPendingChangeItemPath = firstPendingChange?.LocalOrServerItem;
+            if (firstPendingChangeItemPath == null)
+            {
+                return null;
+            }
+
+            var remainingPath = Path.GetDirectoryName(firstPendingChangeItemPath).Replace('\\', '/');
+            var relativeItemPath = firstPendingChangeItemPath.Replace(remainingPath + "/", string.Empty);
 
             do
             {
@@ -458,13 +493,13 @@ namespace WiredTechSolutions.ShelvesetComparer
                 {
                     bestMatchingItem = matches.First();
                 }
-                else if (!matches.Any())
+                else if (! matches.Any())
                 {
                     return bestMatchingItem;
                 }
 
                 remainingPath = Path.GetDirectoryName(remainingPath).Replace('\\', '/');
-                relativeItemPath = firstPendingChange.LocalOrServerItem.Replace(remainingPath + "/", string.Empty);
+                relativeItemPath = firstPendingChangeItemPath.Replace(remainingPath + "/", string.Empty);
             } while (remainingPath != "$" && remainingPath.Length > 0);
 
             return bestMatchingItem;
@@ -561,7 +596,7 @@ namespace WiredTechSolutions.ShelvesetComparer
                 return (T)this.serviceProvider.GetService(typeof(T));
             }
 
-            return default(T);
+            return default;
         }
 
         /// <summary>
@@ -570,11 +605,7 @@ namespace WiredTechSolutions.ShelvesetComparer
         /// <param name="propertyName">The property for which the event needs to be raised</param>
         private void NotifyPropertyChanged(string propertyName)
         {
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (null != handler)
-            {
-                handler(this, new PropertyChangedEventArgs(propertyName));
-            }
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
