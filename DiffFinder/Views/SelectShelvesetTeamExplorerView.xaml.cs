@@ -124,6 +124,7 @@ namespace DiffFinder
         {
             this.ErrorText.Text = error;
             this.ErrorPanel.Visibility = System.Windows.Visibility.Visible;
+            ShelvesetComparer.OutputPaneWriteLine(ParentSection.ServiceProvider, error);
         }
 
         /// <summary>
@@ -166,7 +167,16 @@ namespace DiffFinder
                 var secondSheleveset = this.ListShelvesets.SelectedItems[1] as ShelvesetViewModel;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
 
-                ShelvesetComparer.Instance.ShowComparisonWindow();
+                if (ShelvesetComparer.Instance != null)
+                {
+                    ShelvesetComparer.Instance.ShowComparisonToolWindow();
+                }
+                else
+                {
+                    // if the package has not yet been initialized, then we need to call it via DTE
+                    var dte2 = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
+                    dte2?.ExecuteCommand(ShelvesetComparer.ShelvesetComparerResuldIdDteCommandName);
+                }
             }
             catch (Exception ex)
             {
@@ -202,7 +212,16 @@ namespace DiffFinder
                 var secondSheleveset = pendChangeShelveset;
                 ShelvesetComparerViewModel.Instance.Initialize(firstSheleveset, secondSheleveset);
 
-                ShelvesetComparer.Instance.ShowComparisonWindow();
+                if (ShelvesetComparer.Instance != null)
+                {
+                    ShelvesetComparer.Instance.ShowComparisonToolWindow();
+                }
+                else
+                {
+                    // if the package has not yet been initialized, then we need to call it via DTE
+                    var dte2 = Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(DTE)) as EnvDTE80.DTE2;
+                    dte2?.ExecuteCommand(ShelvesetComparer.ShelvesetComparerResuldIdDteCommandName);
+                }
             }
             catch (Exception ex)
             {

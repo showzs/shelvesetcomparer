@@ -27,4 +27,17 @@ namespace DiffFinder
                 ?? throw new InvalidCastException($"Internal error: Cannot cast '{typeof(TService).Name}' to '{typeof(TOut).Name}'");
         }
     }
+
+    public static class TaskExtensions
+    {
+        public static void GetResultNoContext(this System.Threading.Tasks.Task task)
+        {
+            task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static TResult GetResultNoContext<TResult>(this System.Threading.Tasks.Task<TResult> task)
+        {
+            return task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+    }
 }

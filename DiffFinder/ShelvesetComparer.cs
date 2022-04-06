@@ -5,6 +5,9 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.ComponentModel.Design;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace DiffFinder
 {
@@ -84,6 +87,54 @@ namespace DiffFinder
         }
 
         /// <summary>
+        /// Static helper to ensure package is loaded and call Compare command
+        /// </summary>
+        public static void ExecuteCommand_Compare()
+        {
+            if (Instance != null)
+            {
+                Instance.ShowComparisonToolWindow();
+            }
+            else
+            {
+                ExecuteCommand(ShelvesetComparerResuldIdDteCommandName);
+            }
+        }
+
+        /// <summary>
+        /// Static helper to ensure package is loaded and call Select command
+        /// </summary>
+        public static void ExecuteCommand_Select()
+        {
+            if (Instance != null)
+            {
+                Instance.NavigateToShelvestComparerPage();
+            }
+            else
+            {
+                ExecuteCommand(ShelvesetComparerTeamExplorerViewIdDteCommandName);
+            }
+        }
+        private static void ExecuteCommand(string commandName)
+        {
+            if (!ThreadHelper.CheckAccess())
+            {
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    ExecuteCommand(commandName);
+                });
+            }
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // if the package has not yet been initialized, then we need to call it via DTE
+            var dte2 = Package.GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            Microsoft.Assumes.NotNull(dte2);
+            dte2.ExecuteCommand(commandName);
+        }
+
+        /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
         private IServiceProvider ServiceProvider
@@ -106,7 +157,7 @@ namespace DiffFinder
         /// <summary>
         /// Open and show ShelvesetComparer result window.
         /// </summary>
-        public void ShowComparisonWindow()
+        public void ShowComparisonToolWindow()
         {
             ToolWindowPane window = package.FindToolWindow(typeof(ShelvesetComparerToolWindow), 0, true);
             if ((null == window) || (null == window.Frame))
@@ -129,7 +180,7 @@ namespace DiffFinder
         /// <param name="e">Event args.</param>
         private void ShelvesetComparerResuldIdMenuItemCallback(object sender, EventArgs e)
         {
-            this.ShowComparisonWindow();
+            this.ShowComparisonToolWindow();
         }
 
         /// <summary>
@@ -161,7 +212,7 @@ namespace DiffFinder
         public void TraceOutput(string text)
         {
 #if TRACE
-            OutputPaneWriteLine(text);
+            OutputPaneWriteLine($"TRACE: {text}");
 #endif
         }
 
@@ -178,30 +229,65 @@ namespace DiffFinder
         /// </summary>
         public static void OutputPaneWriteLine(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
         {
-            var outWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
-            if (outWindow == null)
+            OutputPaneWriteLineAsync(serviceProvider, text, prefixDateTime).GetResultNoContext();
+        }
+
+        /// <summary>
+        /// Write text with optional DateTime prefix to own output pane (create if not existing) and activate pane afterwards.
+        /// </summary>
+        public static async Task OutputPaneWriteLineAsync(IServiceProvider serviceProvider, string text, bool prefixDateTime = true)
+        {
+#if DEBUG
+            Microsoft.Assumes.NotNull(serviceProvider);
+#endif
+            if (serviceProvider == null)
             {
                 return;
             }
 
-            // randomly generated GUID to identify the "Shelveset Comparer" output window pane
-            const string c_ExtensionOutputWindowGuid = "{38BFBA25-8AB3-4F8E-B992-930E403AA281}";
-            Guid paneGuid = new Guid(c_ExtensionOutputWindowGuid);
-            IVsOutputWindowPane generalPane = null;
-            outWindow.GetPane(ref paneGuid, out generalPane);
-            if (generalPane == null)
+            if (! ThreadHelper.CheckAccess())
             {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            }
+
+            var vsOutputWindow = serviceProvider.GetService<SVsOutputWindow, IVsOutputWindow>();
+            if (vsOutputWindow == null)
+            {
+                Debug.WriteLine("Failed to get output window.");
+                return;
+            }
+
+            var paneGuid = Microsoft.VisualStudio.VSConstants.OutputWindowPaneGuid.GeneralPane_guid;
+            // get output window or create it
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.GetPane(ref paneGuid, out var extensionOutputWindow))
+                || extensionOutputWindow == null)
+            {
+                const string paneTitle = "General";
                 // the pane doesn't already exist
-                outWindow.CreatePane(ref paneGuid, Resources.ToolWindowTitle, Convert.ToInt32(true), Convert.ToInt32(true));
-                outWindow.GetPane(ref paneGuid, out generalPane);
+                if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.CreatePane(ref paneGuid, paneTitle, Convert.ToInt32(true), Convert.ToInt32(true))))
+                {
+                    Debug.WriteLine("Failed to create output pane.");
+                    return;
+                }
+                if (Microsoft.VisualStudio.ErrorHandler.Failed(vsOutputWindow.GetPane(ref paneGuid, out extensionOutputWindow))
+                    || extensionOutputWindow == null)
+                {
+                    Debug.WriteLine("Failed to get output pane after create.");
+                }
+            }
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(extensionOutputWindow.Activate()))
+            {
+                Debug.WriteLine("Failed to activate output pane.");
             }
 
             if (prefixDateTime)
             {
                 text = $"{DateTime.Now:G} {text}";
             }
-            generalPane.OutputString(text + Environment.NewLine);
-            generalPane.Activate();
+            if (Microsoft.VisualStudio.ErrorHandler.Failed(extensionOutputWindow.OutputStringThreadSafe(text + Environment.NewLine)))
+            {
+                Debug.WriteLine("Failed to write to output pane.");
+            }
         }
     }
 }

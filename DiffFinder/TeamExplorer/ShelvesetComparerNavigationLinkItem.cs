@@ -38,7 +38,7 @@ namespace DiffFinder
         /// </summary>
         public override void Execute()
         {
-            TeamExplorer.NavigateToShelvesetComparer();
+            ShelvesetComparer.ExecuteCommand_Select();
         }
 
         /// <summary>

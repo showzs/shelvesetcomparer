@@ -284,13 +284,19 @@ namespace DiffFinder
                 throw new ArgumentNullException("secondShelveset");
             }
 
-            var tfcontextManager = this.GetService<ITeamFoundationContextManager>();
             VersionControlServer vcs = null;
 #if ! StubbingWithoutServer
+            var tfcontextManager = this.GetService<ITeamFoundationContextManager>();
+            if (tfcontextManager == null)
+            {
+                this.SummaryText = Resources.ConnectionErrorMessage + " (no ITeamFoundationContextManager)";
+                return;
+            }
+
             vcs = tfcontextManager.CurrentContext?.TeamProjectCollection?.GetService<VersionControlServer>();
             if (vcs == null)
             {
-                this.SummaryText = Resources.ConnectionErrorMessage;
+                this.SummaryText = Resources.ConnectionErrorMessage + " (no VersionControlServer)";
                 return;
             }
 #endif
@@ -300,9 +306,19 @@ namespace DiffFinder
 
             this.files.Clear();
             var firstShelvesetChanges = GetPendingChanges(firstShelveset, vcs);
+            if (firstShelvesetChanges == null)
+            {
+                this.SummaryText = "Failed to get pending changes for first shelveset: " + FirstShelvesetName;
+                return;
+            }
             var secondShelvesetChanges = GetPendingChanges(secondShelveset, vcs);
+            if (secondShelvesetChanges == null)
+            {
+                this.SummaryText = "Failed to get pending changes for second shelveset: " + SecondShelvesetName;
+                return;
+            }
+
             var orderedCollection = new SortedList<string, FileComparisonViewModel>();
-            
             int sameContentFileCount = 0;
             int commonFilesCount = 0;
             foreach (var pendingChange in firstShelvesetChanges)
@@ -322,18 +338,18 @@ namespace DiffFinder
                 orderedCollection.Add(pendingChange.LocalOrServerFolder + "/" + pendingChange.FileName, comparisonItem);
                 if (sameContent)
                 {
-                    sameContentFileCount++;
+                    ++sameContentFileCount;
                 }
 
                 if (matchingFile != null) 
                 {
-                    commonFilesCount++;
+                    ++commonFilesCount;
                 }
             }
 
             foreach (var pendingChange in secondShelvesetChanges)
             {
-                if (!orderedCollection.ContainsKey(pendingChange.LocalOrServerFolder + "/" + pendingChange.FileName))
+                if (! orderedCollection.ContainsKey(pendingChange.LocalOrServerFolder + "/" + pendingChange.FileName))
                 {
                     var isThereAreNamedFile = FindItemWithSameItemId(orderedCollection, pendingChange.ItemId);
                     if (isThereAreNamedFile == null)
@@ -377,11 +393,13 @@ namespace DiffFinder
         private IPendingChange[] GetPendingChanges(ShelvesetViewModel shelveset, VersionControlServer vcs)
         {
 #if ! StubbingWithoutServer
-            return vcs.QueryShelvedChanges(shelveset.Shelveset)[0].PendingChanges
-                .Select(pc => new PendingChangeFacade(pc)).ToArray<IPendingChange>();
+            return vcs.QueryShelvedChanges(shelveset.Shelveset)[0]
+                ?.PendingChanges
+                ?.Select(pc => new PendingChangeFacade(pc))
+                ?.ToArray<IPendingChange>();
 
 #else
-            ShelvesetComparer.Instance.TraceOutput("Debug mode active: using fake pending changes for easier debugging.");
+            ShelvesetComparer.Instance?.TraceOutput("Debug mode active: using fake pending changes for easier debugging (file lists for Shelveset1, Shelveset2, Shelveset3).");
             if (shelveset.Name.Equals("Shelveset1"))
             {
                 return new List<IPendingChange>() 
@@ -430,11 +448,12 @@ namespace DiffFinder
             var matchingFile = secondShelvesetChanges.FirstOrDefault(s => s.ItemId == firstPendingChange.ItemId);
             if (matchingFile == null)
             {
+                // not matched by ItemId, try LocalOrServerItem
                 matchingFile = secondShelvesetChanges.FirstOrDefault(s => s.LocalOrServerItem == firstPendingChange.LocalOrServerItem);
             }
             if (matchingFile == null)
             {
-                // try to find a best matching file by relative path.
+                // still not matched, try to find a best matching file by relative path.
                 matchingFile = FindMatchingChangeWithBestMatchingRelativePath(firstPendingChange, secondShelvesetChanges);
             }
 
@@ -447,8 +466,14 @@ namespace DiffFinder
         private IPendingChange FindMatchingChangeWithBestMatchingRelativePath(IPendingChange firstPendingChange, IPendingChange[] secondShelvesetChanges)
         {
             IPendingChange bestMatchingItem = null;
-            var remainingPath = Path.GetDirectoryName(firstPendingChange.LocalOrServerItem).Replace('\\', '/');
-            var relativeItemPath = firstPendingChange.LocalOrServerItem.Replace(remainingPath + "/", string.Empty);
+            var firstPendingChangeItemPath = firstPendingChange?.LocalOrServerItem;
+            if (firstPendingChangeItemPath == null)
+            {
+                return null;
+            }
+
+            var remainingPath = Path.GetDirectoryName(firstPendingChangeItemPath).Replace('\\', '/');
+            var relativeItemPath = firstPendingChangeItemPath.Replace(remainingPath + "/", string.Empty);
 
             do
             {
@@ -457,13 +482,13 @@ namespace DiffFinder
                 {
                     bestMatchingItem = matches.First();
                 }
-                else if (!matches.Any())
+                else if (! matches.Any())
                 {
                     return bestMatchingItem;
                 }
 
                 remainingPath = Path.GetDirectoryName(remainingPath).Replace('\\', '/');
-                relativeItemPath = firstPendingChange.LocalOrServerItem.Replace(remainingPath + "/", string.Empty);
+                relativeItemPath = firstPendingChangeItemPath.Replace(remainingPath + "/", string.Empty);
             } while (remainingPath != "$" && remainingPath.Length > 0);
 
             return bestMatchingItem;
