@@ -39,7 +39,7 @@ namespace DiffFinder
         /// <summary>
         /// Command menu group (command set GUID).
         /// </summary>
-        public static readonly Guid CommandSet = new Guid("b8e98565-7b6d-4d64-b51d-97fe5e56c5ec");
+        public static readonly Guid CommandSet = new Guid("667E3733-CFA5-4E39-B8E0-8732F02CDB56");
 
         /// <summary>
         /// VS Package that provides this command, not null.

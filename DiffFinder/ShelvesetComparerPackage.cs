@@ -38,7 +38,7 @@ namespace DiffFinder
         /// <summary>
         /// ShelvesetComparerPackage GUID string.
         /// </summary>
-        public const string PackageGuidString = "7359eac9-15de-4749-9ef6-28177437ec9c";
+        public const string PackageGuidString = "59997A1F-A9CE-4016-9A89-F86342F99111";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ShelvesetComparerPackage"/> class.
