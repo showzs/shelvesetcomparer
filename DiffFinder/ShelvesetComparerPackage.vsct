@@ -86,10 +86,10 @@
 
   <Symbols>
     <!-- This is the package guid. -->
-    <GuidSymbol name="guidShelvesetComparerPackage" value="{7359eac9-15de-4749-9ef6-28177437ec9c}" />
+    <GuidSymbol name="guidShelvesetComparerPackage" value="{59997A1F-A9CE-4016-9A89-F86342F99111}" />
 
     <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidShelvesetComparerPackageCmdSet" value="{b8e98565-7b6d-4d64-b51d-97fe5e56c5ec}">
+    <GuidSymbol name="guidShelvesetComparerPackageCmdSet" value="{667E3733-CFA5-4E39-B8E0-8732F02CDB56}">
       <IDSymbol name="IDM_ShelvesetComparer_MENU_TEAM" value="0x1020" />
       <IDSymbol name="IDM_ShelvesetComparer_TEAM_DROPDOWN" value="0x1021" />
 
