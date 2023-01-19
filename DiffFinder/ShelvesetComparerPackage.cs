@@ -61,6 +61,7 @@ namespace DiffFinder
         {
             await base.InitializeAsync(cancellationToken, progress);
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+            await this.GetServiceAsync(typeof(SVsDifferenceService));
             ShelvesetComparer.Initialize(this);
             return;
         }
