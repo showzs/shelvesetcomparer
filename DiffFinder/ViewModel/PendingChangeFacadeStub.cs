@@ -4,8 +4,6 @@
 // This is sample code only, do not use in production environments.
 // </copyright>
 
-#if StubbingWithoutServer
-
 namespace DiffFinder
 {
     using Microsoft.TeamFoundation.VersionControl.Client;
@@ -80,5 +78,3 @@ namespace DiffFinder
 
     }
 }
-
-#endif

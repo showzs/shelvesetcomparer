@@ -75,17 +75,8 @@ namespace DiffFinder
         /// <param name="compareFiles">The compare files view model</param>
         private static void CompareFiles(FileComparisonViewModel compareFiles)
         {
-            string firstFileName = Path.GetTempFileName();
-            string secondFileName = Path.GetTempFileName();
-            if (compareFiles.FirstFile != null)
-            {
-                compareFiles.FirstFile.DownloadShelvedFile(firstFileName);
-            }
-
-            if (compareFiles.SecondFile != null)
-            {
-                compareFiles.SecondFile.DownloadShelvedFile(secondFileName);
-            }
+            GetFileToCompare(compareFiles.FirstFileDisplayName, compareFiles.FirstFile, out var firstFileName, out var extension, out var firstDisplayName);
+            GetFileToCompare(compareFiles.SecondFileDisplayName, compareFiles.SecondFile, out var secondFileName, out extension, out var secondDisplayName);
 
             string diffToolCommandArguments = string.Empty;
             string diffToolCommand = string.Empty;
@@ -96,13 +87,17 @@ namespace DiffFinder
             {
                 var currentProcess = Process.GetCurrentProcess();
                 currentProcess.StartInfo.FileName = currentProcess.Modules[0].FileName;
-                currentProcess.StartInfo.Arguments = string.Format(CultureInfo.CurrentCulture, @"/diff ""{0}"" ""{1}""", firstFileName, secondFileName);
+                currentProcess.StartInfo.Arguments = string.Format(CultureInfo.CurrentCulture, @"/diff ""{0}"" ""{1}"" ""{2}"" ""{3}""", firstFileName, secondFileName, firstDisplayName, secondDisplayName);
                 currentProcess.Start();
             }
             else
             {
                 // So there is a tool configured. Let's use it
-                diffToolCommandArguments = diffToolCommandArguments.Replace("%1", firstFileName).Replace("%2", secondFileName);
+                // $3: Base file, %4: Merged file, %5: Diff command-line options, %6: original file label, %7: Modified file label, %8,9: base file and merged file label
+                diffToolCommandArguments = diffToolCommandArguments.Replace("%1", firstFileName)
+                    .Replace("%2", secondFileName)
+                    .Replace("%6", firstDisplayName)
+                    .Replace("%7", secondDisplayName);
                 var startInfo = new ProcessStartInfo()
                 {
                     Arguments = diffToolCommandArguments,
@@ -110,6 +105,28 @@ namespace DiffFinder
                 };
 
                 Process.Start(startInfo);
+            }
+        }
+
+        private static void GetFileToCompare(string localFilePath, IPendingChange pendingChange, out string fileToDiff, out string extension, out string displayName)
+        {
+            fileToDiff = localFilePath;
+            displayName = fileToDiff;
+            extension = null;
+            if (! File.Exists(fileToDiff))
+            {
+                // if not existing locally, then use temp file for comparison and download server item
+                fileToDiff = Path.GetTempFileName();
+                if (pendingChange != null)
+                {
+                    pendingChange.DownloadShelvedFile(fileToDiff);
+                    extension = Path.GetExtension(pendingChange.FileName);
+                    displayName = $"{pendingChange.ServerItem};{pendingChange.Version}";
+                }
+            }
+            else
+            {
+                extension = Path.GetExtension(fileToDiff);
             }
         }
 
