@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("DiffFinder")]
 [assembly: AssemblyDescription("Visual Studio extension for comparing shelvesets.")]
-[assembly: AssemblyCompany("Rajeev Boobna and dprZoft")]
+[assembly: AssemblyCompany("dprZoft and Rajeev Boobna, Hamid Shahid")]
 [assembly: AssemblyProduct("DiffFinder")]
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
