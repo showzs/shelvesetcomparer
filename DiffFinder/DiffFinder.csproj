@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
@@ -161,8 +161,14 @@
     <EmbeddedResource Include="Resources\grayscale.png" />
     <EmbeddedResource Include="Resources\Images.png" />
     <EmbeddedResource Include="Resources\magnifier.png" />
-    <Content Include="Resources\Package.ico" />
-    <EmbeddedResource Include="Resources\PreviewImage.png" />
+    <Content Include="Resources\Package.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\PreviewImage.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Page Include="Resources\ResourceDictionary.xaml">
