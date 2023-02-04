@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("DiffFinder")]
 [assembly: AssemblyDescription("Visual Studio extension for comparing shelvesets.")]
-[assembly: AssemblyCompany("Rajeev Boobna and dprZoft")]
+[assembly: AssemblyCompany("dprZoft and Rajeev Boobna, Hamid Shahid")]
 [assembly: AssemblyProduct("DiffFinder")]
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
@@ -23,5 +23,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Release")]
 #endif
 
-[assembly: AssemblyVersion("1.0.4.22")]
-[assembly: AssemblyFileVersion("1.0.4.22")]
+[assembly: AssemblyVersion("1.5.0.22")]
+[assembly: AssemblyFileVersion("1.5.0.22")]
