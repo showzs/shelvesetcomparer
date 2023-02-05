@@ -8,7 +8,7 @@ ShelvesetComparer is a Visual Studio extension that allow users to compare conte
 * allow comparison of a shelveset with current workspace local pending changes
 * compare shelvesets targeting different branches, e.g. `$/BranchA/path/to/file1` with `$/BranchB/path/to/file1`
 
-In the comparison list following color coding is used:
+Color coding used in file comparison:
 
 * **black**: no difference / both files are identical
 * **red**: differences / both files differ
@@ -16,9 +16,14 @@ In the comparison list following color coding is used:
 
 ## VisualStudio Marketplace
 
+* [DiffFinder for VS2022](https://marketplace.visualstudio.com/items?itemName=dprZoft.DiffFinder-VS2022)
+* [DiffFinder for VS2019](https://marketplace.visualstudio.com/items?itemName=dprZoft.DiffFinder-VS2019)
+* ShelvesetComparer:
+  * [ShelvesetComparer for VS2022 (see releases)](https://github.com/dprZoft/shelvesetcomparer/releases)
+  * [ShelvesetComparer for VS2019](https://marketplace.visualstudio.com/items?itemName=dprZoft.ShelvesetComparer-VS2019)
 * Previous versions:
-   1. [DiffFinder (VS2017)](https://marketplace.visualstudio.com/items?itemName=RajeevBoobna.DiffFinder)
-   1. [ShelvesetComparer (VS2017)](https://marketplace.visualstudio.com/items?itemName=HamidShahid.ShelvesetComparer-19329)
+  * [DiffFinder (VS2017)](https://marketplace.visualstudio.com/items?itemName=RajeevBoobna.DiffFinder)
+  * [ShelvesetComparer (VS2017)](https://marketplace.visualstudio.com/items?itemName=HamidShahid.ShelvesetComparer-19329)
 
 ## Examples
 
@@ -39,3 +44,13 @@ In the comparison list following color coding is used:
 
       * different branches and different paths:
       ![File comparison: different branches and folders -> tries to find best match](/DiffFinder/Resources/Example_CompareDifferentBranchesAndFolders.png)
+
+## Branches and tags
+
+* DiffFinder (remote / difffinder: https://github.com/rajeevboobna/shelvesetcomparer)
+  * `main/master`: equivalent to latest releases/ branch
+  * `releases/`*: release branches for corresponding VS version
+  * Release tags: `DiffFinder-vN.N.N.N`
+* ShelvesetComparer (remote / upstream: https://github.com/hamidshahid/shelvesetcomparer)
+  * `SC/`*: ShelvesetComparer branches with same logic as for DiffFinder
+  * Release tags: `vN.N.N.N`
