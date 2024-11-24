@@ -195,11 +195,14 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="MessagePack">
+      <Version>2.5.192</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK">
-      <Version>17.0.32112.339</Version>
+      <Version>17.12.40392</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools">
-      <Version>17.0.5234</Version>
+      <Version>17.12.2069</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

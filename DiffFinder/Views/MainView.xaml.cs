@@ -2,6 +2,7 @@
 
 
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Globalization;
@@ -91,17 +92,32 @@ namespace DiffFinder
         /// <param name="compareFiles">The compare files view model</param>
         private static void CompareFiles(FileComparisonViewModel compareFiles)
         {
-            GetFileToCompare(compareFiles.FirstFileDisplayName, compareFiles.FirstFile, out var firstFileName, out var extension, out var firstDisplayName);
-            GetFileToCompare(compareFiles.SecondFileDisplayName, compareFiles.SecondFile, out var secondFileName, out extension, out var secondDisplayName);
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            GetFileToCompare(compareFiles.FirstFileDisplayName, compareFiles.FirstFile, out var firstFileName, out var extension, out var firstDisplayName, out var firstIsTempFile);
+            GetFileToCompare(compareFiles.SecondFileDisplayName, compareFiles.SecondFile, out var secondFileName, out extension, out var secondDisplayName, out var secondIsTempFile);
 
             GetExternalTool(extension, out var diffToolCommand, out var diffToolCommandArguments);
 
             if (string.IsNullOrWhiteSpace(diffToolCommand))
             {
-                var currentProcess = Process.GetCurrentProcess();
-                currentProcess.StartInfo.FileName = currentProcess.Modules[0].FileName;
-                currentProcess.StartInfo.Arguments = string.Format(CultureInfo.CurrentCulture, @"/diff ""{0}"" ""{1}"" ""{2}"" ""{3}""", firstFileName, secondFileName, firstDisplayName, secondDisplayName);
-                currentProcess.Start();
+                //var currentProcess = Process.GetCurrentProcess();
+                //currentProcess.StartInfo.FileName = currentProcess.Modules[0].FileName;
+                //currentProcess.StartInfo.Arguments = string.Format(CultureInfo.CurrentCulture, @"/diff ""{0}"" ""{1}"" ""{2}"" ""{3}""", firstFileName, secondFileName, firstDisplayName, secondDisplayName);
+                //currentProcess.Start();
+
+                //if (!ThreadHelper.CheckAccess())
+                //{
+                //    //await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                //}
+                var diffService = (IVsDifferenceService)Package.GetGlobalService(typeof(SVsDifferenceService));
+                var firstFileDisplayName = $"{compareFiles.FirstFileDisplayName};{compareFiles.FirstShelveName}";
+                var secondFileDisplayName = $"{compareFiles.SecondFileDisplayName};{compareFiles.SecondShelveName}";
+                var caption = $"diff - {compareFiles.FirstFile?.FileName ?? compareFiles.SecondFile?.FileName ?? string.Empty}";
+                var tooltip = $"{firstFileDisplayName}\r\n{secondFileDisplayName}";
+                _ = diffService.OpenComparisonWindow2(firstFileName, secondFileName, caption, tooltip, firstFileDisplayName, secondFileDisplayName, null, null, 0).Show();
+                if (firstIsTempFile) File.Delete(firstFileName);
+                if (secondIsTempFile) File.Delete(secondFileName);
             }
             else
             {
@@ -121,21 +137,27 @@ namespace DiffFinder
             }
         }
 
-        private static void GetFileToCompare(string localFilePath, IPendingChange pendingChange, out string fileToDiff, out string extension, out string displayName)
+        private static void GetFileToCompare(string localFilePath, IPendingChange pendingChange, out string fileToDiff, out string extension, out string displayName, out bool isTempFile)
         {
             fileToDiff = localFilePath;
             displayName = fileToDiff;
             extension = null;
+            isTempFile = false;
             if (! File.Exists(fileToDiff))
             {
                 // if not existing locally, then use temp file for comparison and download server item
-                fileToDiff = Path.GetTempFileName();
                 if (pendingChange != null)
                 {
-                    pendingChange.DownloadShelvedFile(fileToDiff);
                     extension = Path.GetExtension(pendingChange.FileName);
+                    fileToDiff = string.Concat(Path.GetTempPath(), System.Guid.NewGuid().ToString(), extension);
+                    pendingChange.DownloadShelvedFile(fileToDiff);
                     displayName = $"{pendingChange.ServerItem};{pendingChange.Version}";
                 }
+                else
+                {
+                    fileToDiff = Path.GetTempFileName();
+                }
+                isTempFile = true;
             }
             else
             {
